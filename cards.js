@@ -704,115 +704,6 @@ function T2(ctx, d) {
   drawAd(ctx);
 }
 
-
-/* ══════════════════════════════════════════════════════
-   T3 — BORDER FRAME
-   thick red border around photo, white panel below, date pill + logo
-══════════════════════════════════════════════════════ */
-// function T3(ctx, d) {
-//   const ah = adH();
-//   const mainH = H - ah;
-//   const splitY = Math.round(mainH * 0.56);
-
-//   /* ── 1. Photo Top ── */
-//   ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
-//   covT(ctx, img1, 0, 0, W, splitY + 40);
-
-//   /* ── 2. Torn paper divider ── */
-//   function jaggedEdge(ctx, startY, color, amp, freq, phase) {
-//     ctx.beginPath();
-//     ctx.moveTo(0, startY);
-//     for (let x = 0; x <= W; x += freq) {
-//       const y = startY + Math.sin(x * 0.05 + phase) * amp + Math.sin(x * 0.12) * (amp * 0.5);
-//       ctx.lineTo(x, y);
-//     }
-//     ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath();
-//     ctx.fillStyle = color;
-//     ctx.fill();
-//   }
-
-//   // White torn edge
-//   jaggedEdge(ctx, splitY, '#fff', 8, 15, 0);
-//   // Red torn edge slightly lower
-//   jaggedEdge(ctx, splitY + 12, '#9e0000', 8, 15, 0); // Very dark rich red
-
-//   /* ── 3. Logo Top Left (T1 style curved tab) ── */
-//   const lmw = 230;
-//   const lh3 = logo ? Math.round(logo.height / logo.width * lmw) : 36;
-//   const tabH = lh3 + 30;
-//   const curveW = 35;
-//   const startX = 20;
-//   const flatLeft = startX + curveW;
-//   const flatW = lmw + 30;
-//   const flatRight = flatLeft + flatW;
-//   const endX = flatRight + curveW;
-
-//   ctx.fillStyle = '#ffffff';
-//   ctx.beginPath();
-//   ctx.moveTo(startX, 0);
-//   ctx.bezierCurveTo(flatLeft, 0, flatLeft, tabH, flatLeft + curveW, tabH);
-//   ctx.lineTo(flatRight - curveW, tabH);
-//   ctx.bezierCurveTo(flatRight, tabH, flatRight, 0, endX, 0);
-//   ctx.closePath();
-//   ctx.fill();
-
-//   if (logo) {
-//     drawLogo(ctx, flatLeft + 15, tabH - 12, lmw, 'left', 1);
-//   } else {
-//     // Draw text logo with light=false so the text is dark and visible on the white tab
-//     drawTextLogo(ctx, flatLeft + 25, tabH - 16, 1.2, false);
-//   }
-
-//   /* ── 4. Typography (Centered Yellow & White) ── */
-//   ctx.textAlign = 'center';
-//   nosh(ctx);
-//   const textsY = splitY + 90;
-
-//   // Yellow sub-heading (using d.body or fallback)
-//   ctx.fillStyle = '#ffcc00';
-//   ctx.font = 'bold 46px Noto Sans Bengali';
-//   const linesYText = wrapC(ctx, d.body, W / 2, textsY, W - 80, 64);
-
-//   // White Headline
-//   const wTextY = textsY + linesYText * 64 + 10;
-//   ctx.fillStyle = '#fff';
-//   ctx.font = 'bold 56px Noto Serif Bengali';
-//   ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 8;
-//   wrapC(ctx, d.hl, W / 2, wTextY, W - 60, 78);
-//   ctx.shadowBlur = 0;
-
-//   /* ── 5. Bottom Pill Button ── */
-//   const btnMsg = d.sp || 'বিস্তারিত কমেন্টে';
-//   ctx.font = 'bold 36px Noto Sans Bengali';
-//   const pw = ctx.measureText(btnMsg).width + 80;
-//   const ph = 64;
-//   const px = (W - pw) / 2;
-//   const pillY = mainH - 120;
-
-//   ctx.fillStyle = '#d30000'; // brighter red for pill
-//   ctx.beginPath();
-//   // Provide rounded rectangle fallback manually if roundRect is not available in context, though Chrome supports it.
-//   if (ctx.roundRect) {
-//     ctx.roundRect(px, pillY, pw, ph, ph / 2);
-//   } else {
-//     ctx.rect(px, pillY, pw, ph);
-//   }
-//   ctx.fill();
-
-//   ctx.fillStyle = '#fff';
-//   ctx.textBaseline = 'middle';
-//   ctx.fillText(btnMsg, W / 2, pillY + ph / 2);
-//   ctx.textBaseline = 'alphabetic';
-//   ctx.textAlign = 'left';
-
-//   /* ── 6. Website footer ── */
-//   if (d.web) {
-//     ctx.font = '18px Noto Sans Bengali'; ctx.fillStyle = '#ffaa00';
-//     ctx.textAlign = 'center'; ctx.fillText(d.web, W / 2, mainH - 20); ctx.textAlign = 'left';
-//   }
-//   drawAd(ctx);
-// }
-
 /* ══════════════════════════════════════════════════════
    T4 — BANGLADESH TIMES STYLE (Reference Image)
    Left curved photo, Red-Dark gradient bg, White text, Pill button
@@ -910,164 +801,398 @@ function T4(ctx, d) {
 }
 
 /* ══════════════════════════════════════════════════════
-   T5 — BANGLADESH TIMES QUOTE CARD v2 (Reference Image)
-   Red-purple gradient, yellow ❝, white Bengali quote,
-   yellow speaker name, grey pill designation,
-   diagonal white stripe + right-side photo, logo bottom-left
+   T5 — ডার্ক কোট (Dark Quote / Bangladesh Times Style)
+   Full red gradient, large quote, bottom diagonal shapes, person on right
 ══════════════════════════════════════════════════════ */
 function T5(ctx, d) {
   const ah = adH();
-  const mainH = H - ah;
-
-  /* ── 1. Red-Purple Gradient Background ── */
+  const mainH = H - ah; // Canvas height without ad
+  
+  // 1. Red Gradient Background
   const bg = ctx.createLinearGradient(0, 0, 0, mainH);
-  bg.addColorStop(0, '#6b0057'); // Dark purple-red top
-  bg.addColorStop(0.4, '#9e0000'); // Rich red mid
-  bg.addColorStop(1, '#c0392b'); // Bright red bottom
+  bg.addColorStop(0, '#560000'); // Dark maroon
+  bg.addColorStop(0.5, '#7a0000'); // Mid red
+  bg.addColorStop(1, '#9e0000'); // Bottom before shapes, dark red to highlight white
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, mainH);
 
-  /* ── 2. Faint "BANGLADESH TIMES" watermark diagonal ── */
+  // Faint diagonal rays watermark
   ctx.save();
-  ctx.globalAlpha = 0.06;
-  ctx.font = 'bold 80px Arial';
-  ctx.fillStyle = '#ffffff';
-  ctx.translate(W * 0.55, mainH * 0.65);
-  ctx.rotate(-Math.PI / 6);
-  ctx.fillText('www.nagorsomachar24.com', 0, 0);
+  ctx.globalAlpha = 0.03;
+  ctx.beginPath();
+  for(let i = -W; i < W*2; i += 120) {
+     ctx.moveTo(i, 0);
+     ctx.lineTo(i - 800, mainH);
+  }
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 40;
+  ctx.stroke();
   ctx.restore();
 
-  /* ── 3. Diagonal White + Red Decorative Stripe (bottom area) ── */
-  // White stripe (wider, bottom-right)
+  // 2. White Polygon (Starting from bottom-left, sloping UP to the right)
+  const wLeftY = mainH - 240; // Left side anchor
+  const wRightY = mainH - 450; // Right side anchor
+
+  // Add shadow for depth
   ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur = 15;
+  ctx.shadowOffsetY = -5;
   ctx.beginPath();
-  ctx.moveTo(W * 0.2, mainH);         // bottom-left of stripe
-  ctx.lineTo(W * 0.42, mainH * 0.52); // top-left of stripe
-  ctx.lineTo(W, mainH * 0.52);        // top-right
-  ctx.lineTo(W, mainH);               // bottom-right
+  ctx.moveTo(0, wLeftY);
+  ctx.lineTo(W, wRightY);
+  ctx.lineTo(W, mainH);
+  ctx.lineTo(0, mainH);
   ctx.closePath();
   ctx.fillStyle = '#ffffff';
   ctx.fill();
   ctx.restore();
 
-  // Thin red stripe on top of white stripe
-  ctx.save();
+  // Draw a subtle grey line at the border
   ctx.beginPath();
-  ctx.moveTo(W * 0.2, mainH);
-  ctx.lineTo(W * 0.42, mainH * 0.52);
-  ctx.lineTo(W * 0.47, mainH * 0.52);
-  ctx.lineTo(W * 0.25, mainH);
+  ctx.moveTo(0, wLeftY);
+  ctx.lineTo(W, wRightY);
+  ctx.lineTo(W, wRightY + 8);
+  ctx.lineTo(0, wLeftY + 8);
   ctx.closePath();
-  ctx.fillStyle = '#c0392b';
+  ctx.fillStyle = '#dcdcdc';
+  ctx.fill();
+
+  // 3. Red Triangle (Bottom Right corner)
+  const tLeftX = W * 0.45;
+  const tRightY = mainH - 220; 
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.4)';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(tLeftX, mainH);
+  ctx.lineTo(W, tRightY);
+  ctx.lineTo(W, mainH);
+  ctx.closePath();
+  ctx.fillStyle = '#9e0000'; // Match dark red
   ctx.fill();
   ctx.restore();
 
-  /* ── 4. Photo (right side, over the stripe) ── */
+  // 4. Photo (img1) aligned to the right side
   if (img1) {
-    const photoX = W * 0.38;
-    const photoW = W - photoX;
-    const photoY = mainH * 0.44;
-    const photoH = mainH - photoY;
-    // Clip to bottom-right area
     ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(photoX, photoY);
-    ctx.lineTo(W, photoY);
-    ctx.lineTo(W, mainH);
-    ctx.lineTo(W * 0.2, mainH);
-    ctx.closePath();
-    ctx.clip();
-    cov(ctx, img1, photoX - 40, photoY, photoW + 40, photoH, 1, img1Scale);
+    const iw = img1.width, ih = img1.height;
+    // Base scale adjustment
+    const drawH = mainH * 0.7 * img1Scale; // Default covers ~70% height
+    const drawW = (iw / ih) * drawH;
+    const drawX = W - drawW - 20; // 20px padding from right
+    const drawY = mainH - drawH; // Flush with the ad boundary
+    
+    // Draw directly over the shapes (like reference)
+    ctx.drawImage(img1, drawX, drawY, drawW, drawH);
     ctx.restore();
   }
 
-  /* ── 5. Opening Quote Mark (top-left, large yellow) ── */
-  ctx.font = 'bold 220px Georgia, serif';
-  ctx.fillStyle = '#ffdd00';
-  ctx.textBaseline = 'top';
-  ctx.textAlign = 'left';
-  ctx.fillText('\u201c', 40, 30);
-  ctx.textBaseline = 'alphabetic';
+  // 5. Text elements (Quote icon, Quote, Speaker, Designation)
+  const textX = 50;
+  let textY = 100;
 
-  /* ── 6. Main Quote Text (white, bold, large Bengali) ── */
-  nosh(ctx);
-  const qfs = 56, qlh = qfs * 1.5;
-  const qX = 55, qTextW = W - 110;
-  ctx.font = `bold ${qfs}px Noto Serif Bengali`;
+  // Quote Icon `❝`
+  ctx.font = 'bold 120px Georgia, serif';
   ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'left';
+  ctx.fillText('“', textX - 10, textY + 20); // slightly adjust for Georgia glyph box
+  textY += 60;
 
-  const qWords = d.hl.split(' ');
-  let qLn = '', qLines = [];
-  for (const w of qWords) {
-    const t = qLn ? qLn + ' ' + w : w;
-    if (ctx.measureText(t).width > qTextW && qLn) { qLines.push(qLn); qLn = w; }
-    else qLn = t;
-  }
-  qLines.push(qLn);
-
-  const qStartY = 240;
-  qLines.forEach((line, i) => ctx.fillText(line, qX, qStartY + i * qlh));
-  const qEndY = qStartY + qLines.length * qlh;
-
-  /* ── 7. Speaker Name (yellow, bold, left-aligned) ── */
-  const spY = qEndY + 30;
-  ctx.font = `bold 62px Noto Serif Bengali`;
-  ctx.fillStyle = '#ffdd00';
-  ctx.textAlign = 'left';
-  ctx.fillText(d.sp || 'বক্তার নাম', qX, spY);
-
-  /* ── 8. Designation Pill Box (grey bg, dark text) ── */
-  if (d.des) {
-    ctx.font = `bold 30px Noto Sans Bengali`;
-    const desW = ctx.measureText(d.des).width + 40;
-    const desH = 52;
-    const desX = qX;
-    const desY2 = spY + 18;
-    const desR = 8;
-    // Grey rounded box
-    ctx.fillStyle = 'rgba(200,200,200,0.92)';
-    ctx.beginPath();
-    ctx.moveTo(desX + desR, desY2);
-    ctx.lineTo(desX + desW - desR, desY2);
-    ctx.arc(desX + desW - desR, desY2 + desR, desR, -Math.PI / 2, 0);
-    ctx.lineTo(desX + desW, desY2 + desH - desR);
-    ctx.arc(desX + desW - desR, desY2 + desH - desR, desR, 0, Math.PI / 2);
-    ctx.lineTo(desX + desR, desY2 + desH);
-    ctx.arc(desX + desR, desY2 + desH - desR, desR, Math.PI / 2, Math.PI);
-    ctx.lineTo(desX, desY2 + desR);
-    ctx.arc(desX + desR, desY2 + desR, desR, Math.PI, 3 * Math.PI / 2);
-    ctx.closePath();
-    ctx.fill();
-    // Text inside pill
-    ctx.fillStyle = '#111111';
+  // Quote Text
+  if (d.hl) {
+    ctx.font = `bold ${d.hlFs || 45}px Noto Serif Bengali`;
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'left';
-    ctx.fillText(d.des, desX + 20, desY2 + desH - 11);
+    nosh(ctx);
+    
+    // We need space on the right so text doesn't overlap the person
+    const txtW = W * 0.55; 
+    const lh = (d.hlFs || 45) * 1.5; // Line height
+    
+    const words = d.hl.split(' ');
+    let line = '';
+    for(let i=0; i<words.length; i++) {
+       let testLine = line + words[i] + ' ';
+       let metrics = ctx.measureText(testLine);
+       if (metrics.width > txtW && i > 0) {
+           ctx.fillText(line, textX, textY);
+           line = words[i] + ' ';
+           textY += lh;
+       } else {
+           line = testLine;
+       }
+    }
+    ctx.fillText(line, textX, textY);
+    textY += lh + 20;
   }
 
-  /* ── 9. Logo Bottom-Left (on white stripe area) ── */
-  const logoY = mainH - 90;
-  const logoSrc = logo2 || logo;
-  if (logoSrc) {
-    const lH = 60;
-    const lW = Math.round(logoSrc.width / logoSrc.height * lH);
-    ctx.drawImage(logoSrc, 40, logoY - lH + 10, lW, lH);
+  // Speaker name
+  if (d.sp) {
+    ctx.font = 'bold 50px Noto Sans Bengali';
+    ctx.fillStyle = '#ffcc00'; // Distinct Yellow
+    ctx.fillText(d.sp, textX, textY);
+    textY += 50;
   }
 
-  /* ── 10. Date & Website Bottom-Right ── */
+  // Designation (Black Pill/Rectangle Box)
+  if (d.des) {
+    ctx.font = 'normal 30px Noto Sans Bengali';
+    const desW = ctx.measureText(d.des).width + 30; // padding
+    const desH = 50;
+    
+    ctx.fillStyle = '#050505'; // Black
+    ctx.fillRect(textX, textY, desW, desH); // Drawing a sharp rectangle
+
+    ctx.fillStyle = '#ffffff';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(d.des, textX + 15, textY + desH/2);
+    ctx.textBaseline = 'alphabetic'; // Reset
+  }
+
+  // 6. Footer Content (Logo on White, Date/Web on Red)
+  // Logo
+  const lg = logo2 || logo;
+  if (lg) {
+    // Left-aligned in the white triangle area
+    const lH = 65;
+    const lW = Math.round((lg.width / lg.height) * lH);
+    const lX = 50;
+    const lY = mainH - lH - 30;
+    ctx.drawImage(lg, lX, lY, lW, lH);
+  }
+
+  // Right-aligned elements: Date and Website
   ctx.textAlign = 'right';
   if (d.date) {
-    ctx.font = 'bold 30px Noto Sans Bengali';
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillText(d.date, W - 40, mainH - 90);
+    ctx.font = 'bold 28px Noto Sans Bengali';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(d.date, W - 40, mainH - 70);
   }
+  
   if (d.web) {
-    ctx.font = 'bold 28px Arial, Noto Sans Bengali';
-    ctx.fillStyle = '#1a1a1a';
-    ctx.fillText(d.web, W - 40, mainH - 50);
+    ctx.font = 'bold 26px Arial, Noto Sans Bengali';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(d.web, W - 40, mainH - 30);
   }
   ctx.textAlign = 'left';
 
+  // 7. Advertisement (already handled centrally)
+  drawAd(ctx);
+}
+
+/* ── T6 SPECIFIC HELPERS ── */
+
+// ১. সাদা থেকে গ্রে (Ombre) গ্রেডিয়েন্ট ব্যাকগ্রাউন্ডের জন্য
+function drawOmbreBackground(ctx, h) {
+  const g = ctx.createLinearGradient(0, 0, 0, h);
+  g.addColorStop(0, '#ffffff'); // পিওর সাদা (ওপরে)
+  g.addColorStop(0.3, '#f2f2f2'); // হালকা গ্রে
+  g.addColorStop(1, '#d9d9d9');   // একটু গাঢ় গ্রে (নিচে যেখানে লাল বার শুরু)
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, h);
+}
+
+// ২. ছবির জন্য রাউন্ডেড এবং শ্যাডো ফ্রেম (image_2.png-এর মতো)
+function drawImageFrame(ctx, x, y, w, h) {
+  const r = 15; // কোণাগুলো একটু গোল
+  ctx.save();
+  // শ্যাডো (Drop Shadow)
+  ctx.shadowColor = 'rgba(0,0,0,0.3)';
+  ctx.shadowBlur = 15;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 5;
+
+  // সাদা ফ্রেম/ব্যাকগ্রাউন্ড
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    // Fallback if roundRect is not supported
+    ctx.rect(x, y, w, h);
+  }
+  ctx.fill();
+  ctx.restore();
+
+  // এটি একটি ক্লিপিং পাথ হিসেবেও কাজ করবে যাতে ছবি ফ্রেমের বাইরে না যায়
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, w, h, r);
+  } else {
+    ctx.rect(x, y, w, h);
+  }
+  ctx.clip();
+}
+
+/* ══════════════════════════════════════════════════════
+   T6 — PHOTOGRAPHY FRAME
+   Top half photo, red divider, dark lower half, custom footer
+══════════════════════════════════════════════════════ */
+function T6(ctx, d) {
+  const ah = adH();
+  const mainH = H - ah; // 1080 if ad is off, 960 if ad is on
+
+  const splitY = mainH * 0.58; // Red bar position
+
+  // 1. Photo Area (Top)
+  if (img1) {
+    cov(ctx, img1, 0, 0, W, splitY, 1, img1Scale);
+  } else {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, splitY);
+  }
+
+  // Falloff gradient at the very top for Date visibility
+  const tg = ctx.createLinearGradient(0, 0, 0, 100);
+  tg.addColorStop(0, 'rgba(0,0,0,0.5)');
+  tg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = tg;
+  ctx.fillRect(0, 0, W, 120);
+
+  // Top Left Date
+  if (d.date) {
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'normal 38px Noto Sans Bengali';
+    ctx.textAlign = 'left';
+    ctx.fillText(d.date, 30, 60);
+  }
+
+  // 2. Thick Red Divider with Faint Watermark Text
+  const redH = 50;
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(0, splitY, W, redH);
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(0,0,0,0.15)'; // Faint dark watermark
+  ctx.font = 'bold 44px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('Nogor Somachar 24', W / 2, splitY + redH / 2 + 2);
+  ctx.restore();
+
+  // 3. Dark Grey Bottom Area
+  const darkY = splitY + redH;
+  const darkH = mainH - darkY - 80;
+  ctx.fillStyle = '#2b2b2b';
+  ctx.fillRect(0, darkY, W, darkH);
+
+  // Photo Credit (Top Right of Dark Area)
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'normal 30px Noto Sans Bengali';
+  ctx.textAlign = 'right';
+  ctx.fillText(d.sp || 'ছবি: সংগৃহীত', W - 30, darkY + 45);
+
+  // Faint Globe Watermark in Dark Area
+  ctx.save();
+  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.font = 'bold 380px serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🌐', W / 2, darkY + darkH / 2);
+  ctx.restore();
+
+  // Headline inside Dark Area (Centered)
+  if (d.hl && d.hl !== 'শিরোনাম') {
+    ctx.fillStyle = '#fff';
+    ctx.font = `bold ${d.hlFs || 48}px Noto Serif Bengali`;
+    ctx.textAlign = 'center';
+    nosh(ctx);
+    wrapC(ctx, d.hl, W / 2, darkY + 140, W - 80, (d.hlFs || 48) * 1.4);
+  }
+
+  // 4. Custom Footer (White Left + Red Right)
+  const ftY = mainH - 80;
+
+  // Base is red
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(0, ftY, W, 80);
+
+  // Measure Logo to size the white box exactly
+  const lg = logo2 || logo;
+  let lH = 66, lW = 350; // increased logo height to match reference
+  if (lg) {
+    lW = Math.round((lg.width / lg.height) * lH);
+  }
+  const whiteW = 20 + lW + 20; // Exact fit padding to match sharp cutoff
+
+  // White box on the left
+  ctx.fillStyle = '#c0392b';
+  ctx.fillRect(0, ftY, whiteW, 80);
+
+  if (lg) {
+    ctx.drawImage(lg, 20, ftY + (80 - lH) / 2, lW, lH);
+  }
+
+  // Social Icons with exact brand colors inside white circles
+  const socIcons = [
+    { bg: '#1877f2', txt: 'f', font: 'bold 26px Arial', r: 20 },
+    { bg: '#ff0000', txt: '▶', font: '16px Arial', r: 20 },
+    { bg: 'transparent', txt: '📷', font: '24px serif', r: 20 }, // Insta fallback
+    { bg: '#000000', txt: '♪', font: 'bold 22px Arial', r: 20 },
+    { bg: '#229ed9', txt: '✈', font: 'bold 20px Arial', r: 20 }
+  ];
+  let ix = whiteW + 35; // gap between white box and first icon
+  let iy = ftY + 40;
+  ctx.save();
+  socIcons.forEach(ic => {
+    // White background ring
+    ctx.beginPath(); ctx.arc(ix, iy, ic.r + 2, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff'; ctx.fill();
+
+    if (ic.bg !== 'transparent') {
+      ctx.beginPath(); ctx.arc(ix, iy, ic.r, 0, Math.PI * 2);
+      ctx.fillStyle = ic.bg; ctx.fill();
+    } else {
+      // Instagram gradient
+      const ig = ctx.createLinearGradient(ix - ic.r, iy - ic.r, ix + ic.r, iy + ic.r);
+      ig.addColorStop(0, '#f09433'); ig.addColorStop(0.3, '#e6683c');
+      ig.addColorStop(0.6, '#dc2743'); ig.addColorStop(1, '#bc1888');
+      ctx.beginPath(); ctx.arc(ix, iy, ic.r, 0, Math.PI * 2);
+      ctx.fillStyle = ig; ctx.fill();
+    }
+    // Icon text symbol
+    ctx.fillStyle = '#fff';
+    ctx.font = ic.font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ic.txt, ix, iy);
+    ix += 50; // closer gap between icons
+  });
+  ctx.restore();
+
+  // Dark Pill button "বিস্তারিত কমেন্টে.." on the far right
+  const pillTxt = 'বিস্তারিত কমেন্টে..';
+  ctx.font = 'bold 24px Noto Sans Bengali';
+  const textW = ctx.measureText(pillTxt).width;
+
+  // Custom pill rendering with globe icon
+  // the globe emoji can have slightly unpredictable width, let's assume 30px width
+  const globeW = 30;
+  const pillPadding = 25;
+  const pillW = pillPadding + globeW + 8 + textW + pillPadding;
+  const pillH = 50, pillR = 25;
+  const pillX = W - pillW - 20; // 20px right margin
+  const pillY = ftY + (80 - pillH) / 2;
+
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
+  else { ctx.rect(pillX, pillY, pillW, pillH); }
+  ctx.fill();
+
+  ctx.fillStyle = '#5dade2'; // Light blue globe
+  ctx.font = '22px Arial';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🌐', pillX + pillPadding, ftY + 40 + 2); // visually centered
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 24px Noto Sans Bengali';
+  ctx.fillText(pillTxt, pillX + pillPadding + globeW + 8, ftY + 40 + 2);
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+
+  // Advertisement space
   drawAd(ctx);
 }
 
@@ -1078,8 +1203,8 @@ function roundedRect(ctx, x, y, w, h, r) {
 }
 
 /* ── dispatch ── */
-const FNS = [T1, T1b, T2, T4, T5];
-const TNAMES = ['আর্টিকেল স্টাইল', 'ফুল ব্লিড রেড', 'বর্ডার ফ্রেম', 'সার্কুলার স্প্লিট', 'ডার্ক কোট'];
+const FNS = [T1, T1b, T2, T4, T5, T6];
+const TNAMES = ['আর্টিকেল স্টাইল', 'ফুল ব্লিড রেড', 'বর্ডার ফ্রেম', 'সার্কুলার স্প্লিট', 'ডার্ক কোট', 'ফটোগ্রাফি ফ্রেম'];
 
 function drawT(ctx, idx) { ctx.clearRect(0, 0, W, H); FNS[idx](ctx, inp()); }
 function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }

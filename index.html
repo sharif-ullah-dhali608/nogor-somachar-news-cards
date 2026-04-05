@@ -443,8 +443,9 @@
                 height: auto
             }
 
+            /* Reverse to show canvas on top */
             .app {
-                flex-direction: column;
+                flex-direction: column-reverse;
                 overflow: visible;
                 height: auto
             }
@@ -458,11 +459,12 @@
                 flex-shrink: unset
             }
 
-            /* Canvas area stacks below, fits to page */
+            /* Canvas area is on top, fits to page */
             .ca {
-                padding: 12px 8px;
-                min-height: 60vw;
-                justify-content: flex-start
+                padding: 16px 12px;
+                min-height: auto;
+                justify-content: flex-start;
+                border-bottom: 1px solid #1f2937;
             }
 
             /* Canvas scales to viewport width */
@@ -510,6 +512,11 @@
             .actions {
                 margin-top: 0
             }
+            
+            /* Mobile interaction states */
+            .sb:not(.show-inputs) #editorInputs { display: none !important; }
+            .sb.show-inputs #sec-templates { display: none !important; }
+            #mobileEditWrap { display: block !important; padding: 16px 14px; }
         }
 
         /* Tiny phones (≤ 380px) */
@@ -522,6 +529,16 @@
             .upr {
                 grid-template-columns: 1fr
             }
+        }
+
+        /* Logic specific classes */
+        #editorInputs {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        #mobileEditWrap {
+            display: none;
         }
     </style>
 </head>
@@ -539,15 +556,20 @@
     </header>
 
     <div class="app">
-        <aside class="sb">
+        <aside class="sb" id="sidebar">
 
-            <div class="sec">
+            <div class="sec" id="sec-templates">
                 <h3>📋 টেমপ্লেট বেছে নিন</h3>
                 <div class="tgrid" id="tgrid"></div>
             </div>
 
-            <div class="sec">
-                <h3>🖼 ফটো আপলোড</h3>
+            <div id="mobileEditWrap">
+                <button class="btn br" id="mobileEditBtn" onclick="toggleMobileInputs()" style="font-size: 1rem; padding: 14px;">কন্টেন্ট ও ছবি যোগ করুন ✎</button>
+            </div>
+
+            <div id="editorInputs">
+                <div class="sec">
+                    <h3>🖼 ফটো আপলোড</h3>
                 <div class="upr">
                     <div class="ub" id="ub1"><input type="file" id="up1" accept="image/*">
                         <div class="ico">📷</div>
@@ -633,14 +655,15 @@
                 </div>
             </div>
 
-            <div class="actions">
-                <button class="btn br" onclick="rf()">🔄 রিফ্রেশ প্রিভিউ</button>
-                <div class="brow">
-                    <button class="btn br" onclick="dl('png')">⬇ PNG</button>
-                    <button class="btn bd" onclick="dl('jpg')">⬇ JPG</button>
-                    <button class="btn bd" onclick="dl('webp')">⬇ WebP</button>
+                <div class="actions">
+                    <button class="btn br" onclick="rf()">🔄 রিফ্রেশ প্রিভিউ</button>
+                    <div class="brow">
+                        <button class="btn br" onclick="dl('png')">⬇ PNG</button>
+                        <button class="btn bd" onclick="dl('jpg')">⬇ JPG</button>
+                        <button class="btn bd" onclick="dl('webp')">⬇ WebP</button>
+                    </div>
                 </div>
-            </div>
+            </div> <!-- end editorInputs -->
         </aside>
 
         <main class="ca">
@@ -649,6 +672,19 @@
         </main>
     </div>
     <script src="cards.js"></script>
+    <script>
+        function toggleMobileInputs() {
+            const sb = document.getElementById('sidebar');
+            const btn = document.getElementById('mobileEditBtn');
+            sb.classList.toggle('show-inputs');
+            
+            if (sb.classList.contains('show-inputs')) {
+                btn.innerHTML = '← টেমপ্লেট পরিবর্তন করুন';
+            } else {
+                btn.innerHTML = 'কন্টেন্ট ও ছবি যোগ করুন ✎';
+            }
+        }
+    </script>
 </body>
 
 </html>
