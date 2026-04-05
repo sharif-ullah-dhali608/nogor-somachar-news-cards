@@ -1,0 +1,27 @@
+{
+  "name": "নগর সমাচার ২৪ – Card Maker",
+  "short_name": "Card Maker",
+  "description": "নগর সমাচার ২৪ নিউজ কার্ড মেকার — প্রফেশনাল নিউজ কার্ড তৈরি করুন",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#c0392b",
+  "orientation": "portrait-primary",
+  "lang": "bn",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "utilities"],
+  "screenshots": []
+}
