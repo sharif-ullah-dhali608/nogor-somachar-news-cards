@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>নগর সমাচার ২৪ – Card Maker</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Serif+Bengali:wght@700;900&family=Noto+Sans+Bengali:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            background: #0a0a0f;
+            color: #f1f5f9;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a0000, #2d0000);
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 3px solid #c0392b;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 6px
+        }
+
+        .hl {
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        #hdrLogo {
+            height: 36px;
+            object-fit: contain
+        }
+
+        .ht h1 {
+            font-size: .95rem;
+            color: #fff
+        }
+
+        .ht p {
+            font-size: .62rem;
+            color: #f87171
+        }
+
+        .hbadge {
+            background: #c0392b;
+            color: #fff;
+            font-size: .62rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            white-space: nowrap
+        }
+
+        /* ── Main app layout ── */
+        .app {
+            display: flex;
+            flex: 1;
+            overflow: hidden
+        }
+
+        /* Sidebar */
+        .sb {
+            width: 340px;
+            flex-shrink: 0;
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column
+        }
+
+        .sec {
+            padding: 12px 14px;
+            border-bottom: 1px solid #1f2937
+        }
+
+        .sec h3 {
+            font-size: .68rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin-bottom: 8px
+        }
+
+        /* template thumbs */
+        .tgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px
+        }
+
+        .tc {
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: .2s;
+            position: relative
+        }
+
+        .tc:hover {
+            border-color: #f59e0b
+        }
+
+        .tc.on {
+            border-color: #c0392b
+        }
+
+        .tc canvas {
+            width: 100%;
+            display: block;
+            border-radius: 6px
+        }
+
+        .tc .tcn {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(0deg, rgba(0, 0, 0, .85), transparent);
+            padding: 14px 6px 4px;
+            font-size: .6rem;
+            color: #fff;
+            text-align: center
+        }
+
+        .tc .tnum {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: #c0392b;
+            color: #fff;
+            font-size: .55rem;
+            font-weight: 700;
+            padding: 1px 6px;
+            border-radius: 3px
+        }
+
+        /* uploads */
+        .upr {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px
+        }
+
+        .ub {
+            border: 2px dashed #1f2937;
+            border-radius: 8px;
+            padding: 18px 6px;
+            min-height: 90px;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+            background: #0f172a;
+            transition: .2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ub:hover,
+        .ub.on {
+            border-color: #c0392b;
+            background: #1a0505
+        }
+
+        .ub input {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%
+        }
+
+        .ub .ico {
+            font-size: 1.3rem
+        }
+
+        .ub p {
+            font-size: .62rem;
+            color: #475569;
+            margin-top: 2px
+        }
+
+        .ub.on p {
+            color: #f87171
+        }
+
+        /* fields */
+        .f {
+            margin-bottom: 8px
+        }
+
+        .f label {
+            font-size: .68rem;
+            color: #64748b;
+            display: block;
+            margin-bottom: 3px
+        }
+
+        .f input,
+        .f select,
+        .f textarea {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #1f2937;
+            color: #f1f5f9;
+            padding: 7px 9px;
+            border-radius: 6px;
+            font-size: .82rem;
+            font-family: inherit;
+            outline: none
+        }
+
+        .f textarea {
+            resize: vertical;
+            min-height: 72px;
+            line-height: 1.5
+        }
+
+        .f input:focus,
+        .f select:focus,
+        .f textarea:focus {
+            border-color: #c0392b
+        }
+
+        /* ad toggle */
+        .ad-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 6px
+        }
+
+        .tog {
+            width: 40px;
+            height: 22px;
+            background: #374151;
+            border-radius: 11px;
+            cursor: pointer;
+            position: relative;
+            transition: .2s;
+            flex-shrink: 0
+        }
+
+        .tog::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            transition: .2s
+        }
+
+        .tog.on {
+            background: #c0392b
+        }
+
+        .tog.on::after {
+            left: 21px
+        }
+
+        .ad-lbl {
+            font-size: .72rem;
+            color: #94a3b8
+        }
+
+        /* colors */
+        .cpr {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 4px
+        }
+
+        .cs {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: .2s
+        }
+
+        .cs.on {
+            border-color: #fff;
+            transform: scale(1.15)
+        }
+
+        .cs.custom {
+            overflow: hidden
+        }
+
+        .cs.custom input {
+            width: 24px;
+            height: 24px;
+            border: none;
+            cursor: pointer;
+            background: none;
+            padding: 0
+        }
+
+        /* image scale slider */
+        .img-scale-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px
+        }
+
+        .img-scale-row input[type=range] {
+            flex: 1;
+            accent-color: #c0392b;
+            cursor: pointer;
+        }
+
+        .img-scale-val {
+            font-size: .72rem;
+            color: #f87171;
+            min-width: 36px;
+            text-align: right
+        }
+
+        /* actions */
+        .actions {
+            padding: 12px 14px;
+            border-top: 1px solid #1f2937;
+            margin-top: auto;
+            flex-shrink: 0
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: .82rem;
+            font-family: inherit;
+            transition: .2s;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px
+        }
+
+        .br {
+            background: #c0392b;
+            color: #fff
+        }
+
+        .br:hover {
+            background: #a93226
+        }
+
+        .brow {
+            display: flex;
+            gap: 6px
+        }
+
+        .brow .btn {
+            margin: 0
+        }
+
+        .bd {
+            background: #1f2937;
+            color: #94a3b8;
+            border: 1px solid #374151
+        }
+
+        .bd:hover {
+            border-color: #c0392b;
+            color: #f87171
+        }
+
+        /* canvas area */
+        .ca {
+            flex: 1;
+            background: #050508;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: auto;
+            gap: 8px
+        }
+
+        .clbl {
+            font-size: .68rem;
+            color: #374151;
+            display: flex;
+            gap: 8px
+        }
+
+        .clbl span {
+            background: #111827;
+            padding: 2px 8px;
+            border-radius: 4px;
+            border: 1px solid #1f2937
+        }
+
+        #mainCanvas {
+            display: block;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, .9), 0 0 0 1px rgba(255, 255, 255, .05);
+            border-radius: 3px;
+            max-width: 100%;
+            height: auto
+        }
+
+        /* ══════════════════════════════════════
+           MOBILE RESPONSIVE  (≤ 768px)
+        ══════════════════════════════════════ */
+        @media (max-width: 768px) {
+
+            /* Stack sidebar + canvas vertically */
+            body {
+                overflow-y: auto;
+                height: auto
+            }
+
+            .app {
+                flex-direction: column;
+                overflow: visible;
+                height: auto
+            }
+
+            /* Sidebar becomes full-width, not scrollable independently */
+            .sb {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid #1f2937;
+                overflow-y: visible;
+                flex-shrink: unset
+            }
+
+            /* Canvas area stacks below, fits to page */
+            .ca {
+                padding: 12px 8px;
+                min-height: 60vw;
+                justify-content: flex-start
+            }
+
+            /* Canvas scales to viewport width */
+            #mainCanvas {
+                width: 100%;
+                max-width: 540px;
+                height: auto
+            }
+
+            /* Header tightened */
+            header {
+                padding: 8px 12px
+            }
+
+            #hdrLogo {
+                height: 28px
+            }
+
+            .ht h1 {
+                font-size: .82rem
+            }
+
+            .ht p {
+                font-size: .58rem
+            }
+
+            /* Smaller template grid thumbnails */
+            .tgrid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            /* Upload boxes comfortable on mobile */
+            .ub {
+                padding: 14px 6px;
+                min-height: 76px
+            }
+
+            /* Bigger tap targets for buttons */
+            .btn {
+                padding: 12px;
+                font-size: .88rem
+            }
+
+            /* Actions pinned at bottom of sidebar, not sticky on mobile */
+            .actions {
+                margin-top: 0
+            }
+        }
+
+        /* Tiny phones (≤ 380px) */
+        @media (max-width: 380px) {
+
+            .tgrid {
+                grid-template-columns: 1fr
+            }
+
+            .upr {
+                grid-template-columns: 1fr
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="hl">
+            <img id="hdrLogo" src="logo.png" alt="Logo" onerror="this.style.display='none'">
+            <div class="ht">
+                <h1>নিউজ কার্ড মেকার</h1>
+                <p>নগর সমাচার ২৪ — News Card Studio 1080×1080</p>
+            </div>
+        </div>
+        <span class="hbadge">5 প্রফেশনাল টেমপ্লেট</span>
+    </header>
+
+    <div class="app">
+        <aside class="sb">
+
+            <div class="sec">
+                <h3>📋 টেমপ্লেট বেছে নিন</h3>
+                <div class="tgrid" id="tgrid"></div>
+            </div>
+
+            <div class="sec">
+                <h3>🖼 ফটো আপলোড</h3>
+                <div class="upr">
+                    <div class="ub" id="ub1"><input type="file" id="up1" accept="image/*">
+                        <div class="ico">📷</div>
+                        <p>মেইন ফটো</p>
+                    </div>
+                    <div class="ub" id="ub2"><input type="file" id="up2" accept="image/*">
+                        <div class="ico">🗃</div>
+                        <p>২য় ফটো</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sec">
+                <h3>✏️ কন্টেন্ট</h3>
+                <div class="f"><label>শিরোনাম / উক্তি</label>
+                    <textarea id="headline">দেশের সর্বশেষ গুরুত্বপূর্ণ সংবাদ শিরোনাম এখানে লিখুন</textarea>
+                    <div class="img-scale-row" style="margin-top:4px; gap:12px">
+                        <div>
+                            <label style="font-size: .62rem; margin-bottom:0">ফন্ট সাইজ:</label>
+                            <input type="number" id="hlFs" value="48" style="width:60px; padding:4px"
+                                oninput="rf(); rth();">
+                        </div>
+                        <div style="flex:1">
+                            <label style="font-size: .62rem; margin-bottom:0">পজিশন (Y):</label>
+                            <input type="range" id="hlY" min="0" max="300" value="100" oninput="rf(); rth();">
+                        </div>
+                    </div>
+                </div>
+                <div class="f"><label>বডি টেক্সট (ঐচ্ছিক)</label><textarea id="bodytext"
+                        style="min-height:56px"></textarea></div>
+                <div class="f"><label>বক্তা / রিপোর্টার নাম</label><input type="text" id="speaker" value=""></div>
+                <div class="f"><label>পদবি / বিভাগ</label><input type="text" id="designation" value=""></div>
+                <div class="f"><label>ক্যাটাগরি</label>
+                    <select id="category">
+                        <option>🔴 ব্রেকিং নিউজ</option>
+                        <option>📌 জাতীয়</option>
+                        <option>🌐 আন্তর্জাতিক</option>
+                        <option>💼 অর্থনীতি</option>
+                        <option>🏆 খেলাধুলা</option>
+                        <option>🎭 বিনোদন</option>
+                        <option>🏥 স্বাস্থ্য</option>
+                        <option>⚖️ রাজনীতি</option>
+                        <option>📢 এক্সক্লুসিভ</option>
+                    </select>
+                </div>
+                <div class="f"><label>তারিখ</label><input type="text" id="catdate" value="২ মার্চ ২০২৬"></div>
+                <div class="f"><label>ওয়েবসাইট</label><input type="text" id="website" value="">
+                </div>
+            </div>
+
+            <div class="sec">
+                <h3>🎨 অ্যাকসেন্ট রং</h3>
+                <div class="cpr" id="colorPalette"></div>
+            </div>
+
+            <div class="sec">
+                <h3>📢 বিজ্ঞাপন ফুটার</h3>
+                <div class="ub" id="ubAd" style="margin-bottom:8px"><input type="file" id="upAd" accept="image/*">
+                    <div class="ico">🖼</div>
+                    <p>বিজ্ঞাপন ইমেজ আপলোড</p>
+                </div>
+                <div class="ad-row">
+                    <div class="tog on" id="adTog" onclick="toggleAd()"></div>
+                    <span class="ad-lbl" id="adLbl">বিজ্ঞাপন দেখানো হচ্ছে</span>
+                </div>
+            </div>
+
+            <div class="sec">
+                <h3>🔍 ছবির সাইজ (জুম)</h3>
+                <div class="f">
+                    <label>মেইন ফটো স্কেল <span class="img-scale-val" id="sc1val">১০০%</span></label>
+                    <div class="img-scale-row">
+                        <input type="range" id="sc1" min="50" max="200" value="100" step="1"
+                            oninput="img1Scale=this.value/100; $('sc1val').textContent=this.value+'%'; rf(); rth();">
+                    </div>
+                </div>
+                <div class="f">
+                    <label>২য় ফটো স্কেল <span class="img-scale-val" id="sc2val">১০০%</span></label>
+                    <div class="img-scale-row">
+                        <input type="range" id="sc2" min="50" max="200" value="100" step="1"
+                            oninput="img2Scale=this.value/100; $('sc2val').textContent=this.value+'%'; rf(); rth();">
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button class="btn br" onclick="rf()">🔄 রিফ্রেশ প্রিভিউ</button>
+                <div class="brow">
+                    <button class="btn br" onclick="dl('png')">⬇ PNG</button>
+                    <button class="btn bd" onclick="dl('jpg')">⬇ JPG</button>
+                    <button class="btn bd" onclick="dl('webp')">⬇ WebP</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="ca">
+            <div class="clbl"><span id="csize">1080 × 1080 px</span><span id="ctname">টেমপ্লেট ১</span></div>
+            <canvas id="mainCanvas" width="1080" height="1080"></canvas>
+        </main>
+    </div>
+    <script src="cards.js"></script>
+</body>
+
+</html>
