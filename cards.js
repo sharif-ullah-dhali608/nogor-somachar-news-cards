@@ -33,51 +33,51 @@ function processLogo(img) {
 
 function removeWhiteBgFloodFill(imgObj, callback) {
   const c = document.createElement('canvas');
-  const maxDim = 800; 
+  const maxDim = 800;
   let w = imgObj.width, h = imgObj.height;
-  if(w > maxDim || h > maxDim) {
-    const r = Math.min(maxDim/w, maxDim/h);
+  if (w > maxDim || h > maxDim) {
+    const r = Math.min(maxDim / w, maxDim / h);
     w *= r; h *= r;
   }
   w = Math.round(w) || 1; h = Math.round(h) || 1;
   c.width = w; c.height = h;
   const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.drawImage(imgObj, 0, 0, w, h);
-  
+
   const imgD = ctx.getImageData(0, 0, w, h);
   const data = imgD.data;
-  
-  const bgR = (data[0] + data[(w-1)*4]) / 2;
-  const bgG = (data[1] + data[(w-1)*4+1]) / 2;
-  const bgB = (data[2] + data[(w-1)*4+2]) / 2;
-  
+
+  const bgR = (data[0] + data[(w - 1) * 4]) / 2;
+  const bgG = (data[1] + data[(w - 1) * 4 + 1]) / 2;
+  const bgB = (data[2] + data[(w - 1) * 4 + 2]) / 2;
+
   const stack = new Uint32Array(w * h);
   let stackLen = 0;
   const visited = new Uint8Array(w * h);
-  
+
   const push = (x, y) => {
-    if(x < 0 || y < 0 || x >= w || y >= h) return;
+    if (x < 0 || y < 0 || x >= w || y >= h) return;
     const idx = y * w + x;
-    if(visited[idx]) return;
+    if (visited[idx]) return;
     visited[idx] = 1;
     stack[stackLen++] = idx;
   };
-  
-  for(let x=0; x<w; x++){ push(x, 0); push(x, h-1); }
-  for(let y=0; y<h; y++){ push(0, y); push(w-1, y); }
-  
-  while(stackLen > 0) {
+
+  for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
+  for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+
+  while (stackLen > 0) {
     const idx = stack[--stackLen];
     const x = idx % w;
     const y = Math.floor(idx / w);
-    
+
     let i = idx * 4;
-    let r = data[i], g = data[i+1], b = data[i+2];
-    
+    let r = data[i], g = data[i + 1], b = data[i + 2];
+
     let dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
-    if(dist < 80) {
-      data[i+3] = 0; // set transparent
-      push(x-1, y); push(x+1, y); push(x, y-1); push(x, y+1);
+    if (dist < 80) {
+      data[i + 3] = 0; // set transparent
+      push(x - 1, y); push(x + 1, y); push(x, y - 1); push(x, y + 1);
     }
   }
 
@@ -103,13 +103,13 @@ function flipSelectedImage() {
     cx.translate(c.width, 0);
     cx.scale(-1, 1);
     cx.drawImage(trgImg, 0, 0);
-    
+
     const res = new Image();
     res.onload = () => {
       if (target === 1) { img1 = res; origImg1 = res; }
       else if (target === 2) img2 = res;
       else adImg = res;
-      
+
       b.textContent = '✅ ফ্লিপ সম্পন্ন!';
       setTimeout(() => { b.textContent = '↔️ হরিজন্টাল ফ্লিপ (Horizontal Flip)'; b.disabled = false; }, 1500);
       rf(); rth();
@@ -134,6 +134,13 @@ let logo2 = null;
 let rawLogo = new Image();
 rawLogo.onload = () => { rf(); rth(); };
 rawLogo.src = 'logo.png';
+
+let clockImg = null;
+(() => {
+  const cl = new Image();
+  cl.onload = () => { clockImg = cl; rf(); rth(); };
+  cl.src = 'clock.png';
+})();
 
 
 function inp() { return { hl: $('headline').value || 'শিরোনাম', hlFs: parseInt($('hlFs').value) || 48, hlY: parseInt($('hlY').value) || 100, hlX: parseInt($('hlX').value) || 52, body: $('bodytext').value || '', sp: $('speaker').value || '', des: $('designation').value || '', cat: $('category').value, date: $('catdate').value || '', web: $('website').value || '', accent }; }
@@ -607,6 +614,38 @@ function T7(ctx, d) {
     ctx.textAlign = 'left';
   }
 
+  /* 2b. Clock badge — top-right corner, circular */
+  if (clockImg && clockImg.width) {
+    const badgeR = 60;
+    const badgeX = W - 24 - badgeR; // top-RIGHT side
+    const badgeY = 24 + badgeR;
+    ctx.save();
+    // 1. Clip to circle
+    ctx.beginPath();
+    ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    // 2. White background fill
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(badgeX - badgeR - 1, badgeY - badgeR - 1, badgeR * 2 + 2, badgeR * 2 + 2);
+    // 3. Scale by HEIGHT (image is landscape) so full logo shows
+    const imgAspect = clockImg.width / clockImg.height;
+    const fitH = badgeR * 2 * 1.05;
+    const fitW = fitH * imgAspect;
+    // Logo is right-of-center in the source image, shift LEFT to center it
+    const logoXShift = fitW * 0.050;
+    ctx.drawImage(clockImg, badgeX - fitW / 2 - logoXShift, badgeY - fitH / 2, fitW, fitH);
+    ctx.restore();
+    // 4. White border ring
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(badgeX, badgeY, badgeR + 1, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+  }
+
   /* 3. Layout metrics */
   const footerH = 240;
   const fY = mainH - footerH;
@@ -806,15 +845,15 @@ $('btnRemoveBg')?.addEventListener('click', () => {
   const b = $('btnRemoveBg');
   b.textContent = '⏳ রিমুভ হচ্ছে...';
   b.disabled = true;
-  
+
   setTimeout(() => {
     removeWhiteBgFloodFill(origImg1, (resImg) => {
-      img1 = resImg; 
+      img1 = resImg;
       b.textContent = '✅ ব্যাকগ্রাউন্ড রিমুভড!';
-      setTimeout(()=> { b.textContent = '🪄 ম্যাজিক ব্যাকগ্রাউন্ড রিমুভ'; b.disabled = false; }, 2000);
+      setTimeout(() => { b.textContent = '🪄 ম্যাজিক ব্যাকগ্রাউন্ড রিমুভ'; b.disabled = false; }, 2000);
       rf(); rth();
     });
-  }, 50); 
+  }, 50);
 });
 
 $('upAd').addEventListener('change', e => loadImg(e.target.files[0], 3));
