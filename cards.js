@@ -3,6 +3,8 @@ const W = 1080, H = 1080;
 const COLORS = ['#c0392b', '#e74c3c', '#b71c1c', '#e67e22', '#f39c12', '#43a047', '#1565c0', '#8e44ad', '#000', '#1a1a1a', '#fff'];
 let img1 = null, img2 = null, adImg = null, logo = null, accent = '#c0392b', curT = 0, showAd = true;
 let img1Scale = 1.0, img2Scale = 1.0;
+let img1OffX = 0, img1OffY = 0, img2OffX = 0, img2OffY = 0;
+let adImgScale = 1.0, adImgOffX = 0, adImgOffY = 0;
 const $ = id => document.getElementById(id);
 
 function processLogo(img) {
@@ -29,6 +31,93 @@ function processLogo(img) {
   return ret;
 }
 
+function removeWhiteBgFloodFill(imgObj, callback) {
+  const c = document.createElement('canvas');
+  const maxDim = 800; 
+  let w = imgObj.width, h = imgObj.height;
+  if(w > maxDim || h > maxDim) {
+    const r = Math.min(maxDim/w, maxDim/h);
+    w *= r; h *= r;
+  }
+  w = Math.round(w) || 1; h = Math.round(h) || 1;
+  c.width = w; c.height = h;
+  const ctx = c.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(imgObj, 0, 0, w, h);
+  
+  const imgD = ctx.getImageData(0, 0, w, h);
+  const data = imgD.data;
+  
+  const bgR = (data[0] + data[(w-1)*4]) / 2;
+  const bgG = (data[1] + data[(w-1)*4+1]) / 2;
+  const bgB = (data[2] + data[(w-1)*4+2]) / 2;
+  
+  const stack = new Uint32Array(w * h);
+  let stackLen = 0;
+  const visited = new Uint8Array(w * h);
+  
+  const push = (x, y) => {
+    if(x < 0 || y < 0 || x >= w || y >= h) return;
+    const idx = y * w + x;
+    if(visited[idx]) return;
+    visited[idx] = 1;
+    stack[stackLen++] = idx;
+  };
+  
+  for(let x=0; x<w; x++){ push(x, 0); push(x, h-1); }
+  for(let y=0; y<h; y++){ push(0, y); push(w-1, y); }
+  
+  while(stackLen > 0) {
+    const idx = stack[--stackLen];
+    const x = idx % w;
+    const y = Math.floor(idx / w);
+    
+    let i = idx * 4;
+    let r = data[i], g = data[i+1], b = data[i+2];
+    
+    let dist = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
+    if(dist < 80) {
+      data[i+3] = 0; // set transparent
+      push(x-1, y); push(x+1, y); push(x, y-1); push(x, y+1);
+    }
+  }
+
+  ctx.putImageData(imgD, 0, 0);
+  const res = new Image();
+  res.onload = () => callback(res);
+  res.src = c.toDataURL("image/png");
+}
+
+function flipSelectedImage() {
+  const target = parseInt($('imgCtrlTarget').value);
+  let trgImg = target === 1 ? img1 : target === 2 ? img2 : adImg;
+  if (!trgImg) return;
+
+  const b = $('btnFlipImg');
+  b.textContent = '⏳ ফ্লিপ হচ্ছে...';
+  b.disabled = true;
+
+  setTimeout(() => {
+    const c = document.createElement('canvas');
+    c.width = trgImg.width; c.height = trgImg.height;
+    const cx = c.getContext('2d');
+    cx.translate(c.width, 0);
+    cx.scale(-1, 1);
+    cx.drawImage(trgImg, 0, 0);
+    
+    const res = new Image();
+    res.onload = () => {
+      if (target === 1) { img1 = res; origImg1 = res; }
+      else if (target === 2) img2 = res;
+      else adImg = res;
+      
+      b.textContent = '✅ ফ্লিপ সম্পন্ন!';
+      setTimeout(() => { b.textContent = '↔️ হরিজন্টাল ফ্লিপ (Horizontal Flip)'; b.disabled = false; }, 1500);
+      rf(); rth();
+    };
+    res.src = c.toDataURL("image/png");
+  }, 50);
+}
+
 (() => {
   const l = new Image();
   l.onload = () => {
@@ -42,19 +131,23 @@ function processLogo(img) {
 let logo2 = null;
 (() => { const l = new Image(); l.onload = () => { logo2 = l; rf(); rth(); }; l.src = 'logo-removebg-preview.png'; })();
 
+let rawLogo = new Image();
+rawLogo.onload = () => { rf(); rth(); };
+rawLogo.src = 'logo.png';
 
-function inp() { return { hl: $('headline').value || 'শিরোনাম', hlFs: parseInt($('hlFs').value) || 48, hlY: parseInt($('hlY').value) || 100, body: $('bodytext').value || '', sp: $('speaker').value || '', des: $('designation').value || '', cat: $('category').value, date: $('catdate').value || '', web: $('website').value || '', accent }; }
+
+function inp() { return { hl: $('headline').value || 'শিরোনাম', hlFs: parseInt($('hlFs').value) || 48, hlY: parseInt($('hlY').value) || 100, hlX: parseInt($('hlX').value) || 52, body: $('bodytext').value || '', sp: $('speaker').value || '', des: $('designation').value || '', cat: $('category').value, date: $('catdate').value || '', web: $('website').value || '', accent }; }
 
 /* ── core helpers ── */
-function cov(ctx, im, x, y, w, h, al = 1, scale = 1) {
+function cov(ctx, im, x, y, w, h, al = 1, scale = 1, offX = 0, offY = 0) {
   if (!im) return; ctx.save(); ctx.globalAlpha = al; ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
   const s = Math.max(w / im.width, h / im.height) * scale, nw = im.width * s, nh = im.height * s;
-  ctx.drawImage(im, x + (w - nw) / 2, y + (h - nh) / 2, nw, nh); ctx.restore();
+  ctx.drawImage(im, x + (w - nw) / 2 + offX, y + (h - nh) / 2 + offY, nw, nh); ctx.restore();
 }
-function covT(ctx, im, x, y, w, h, al = 1, scale = 1) {/* top-anchored */
+function covT(ctx, im, x, y, w, h, al = 1, scale = 1, offX = 0, offY = 0) {/* top-anchored */
   if (!im) return; ctx.save(); ctx.globalAlpha = al; ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
   const s = Math.max(w / im.width, h / im.height) * scale, nw = im.width * s, nh = im.height * s;
-  ctx.drawImage(im, x + (w - nw) / 2, y, nw, nh); ctx.restore();
+  ctx.drawImage(im, x + (w - nw) / 2 + offX, y + offY, nw, nh); ctx.restore();
 }
 function linG(ctx, x, y, w, h, stops) { const g = ctx.createLinearGradient(x, y, x, y + h); stops.forEach(([p, c]) => g.addColorStop(p, c)); ctx.fillStyle = g; ctx.fillRect(x, y, w, h); }
 function radG(ctx, cx, cy, r0, r1, stops) { const g = ctx.createRadialGradient(cx, cy, r0, cx, cy, r1); stops.forEach(([p, c]) => g.addColorStop(p, c)); return g; }
@@ -110,7 +203,7 @@ function adH() { return showAd ? AD_H : 0; }
 function drawAd(ctx) {
   if (!showAd) return;
   const y = H - AD_H;
-  if (adImg) { cov(ctx, adImg, 0, y, W, AD_H); }
+  if (adImg) { cov(ctx, adImg, 0, y, W, AD_H, 1, adImgScale, adImgOffX, adImgOffY); }
   else {
     ctx.fillStyle = '#f5c842'; ctx.fillRect(0, y, W, AD_H);
     ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.font = 'bold 22px Noto Sans Bengali'; ctx.textAlign = 'center';
@@ -119,471 +212,18 @@ function drawAd(ctx) {
 }
 
 /* ══════════════════════════════════════════════════════
-   T1 — ARTICLE STYLE
-   photo top, white card, CENTERED logo in circle, centered headline
-══════════════════════════════════════════════════════ */
-function T1(ctx, d) {
-  const ah = adH();
-  const PHOTO_Y = 0;
-  const PHOTO_H = 520;
-  const CARD_Y = 480;
-  const CARD_H = H - ah - CARD_Y;
-
-  /* photo — top-anchored */
-  covT(ctx, img1, 0, PHOTO_Y, W, PHOTO_H + 40, 1, img1Scale);
-
-  /* elegant curved date tab hanging from top right */
-  if (d.date) {
-    ctx.font = `bold 24px Noto Sans Bengali`;
-    const tw = ctx.measureText(d.date).width;
-    const tabH = 50, curveW = 35;
-    const endX = W - 30;
-    const flatRight = endX - curveW;
-    const flatW = tw + 40;
-    const flatLeft = flatRight - flatW;
-    const startX = flatLeft - curveW;
-
-    ctx.fillStyle = '#8b1a1a';
-    ctx.beginPath();
-    ctx.moveTo(startX, 0);
-    ctx.bezierCurveTo(flatLeft, 0, flatLeft, tabH, flatLeft + curveW, tabH);
-    ctx.lineTo(flatRight - curveW, tabH);
-    ctx.bezierCurveTo(flatRight, tabH, flatRight, 0, endX, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(d.date, flatLeft + flatW / 2, tabH / 2 + 2);
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
-  }
-
-  /* elegant curved logo tab hanging from top left */
-  if (logo2) {
-    const l2h = 36;
-    const l2w = Math.round(logo2.width / logo2.height * l2h) || 120;
-    const tabH = 50, curveW = 35;
-    const startX = 30;
-    const flatLeft = startX + curveW;
-    const flatW = l2w + 40;
-    const flatRight = flatLeft + flatW;
-    const endX = flatRight + curveW;
-
-    // Use white background to mirror the right tab
-    ctx.fillStyle = '#8b1a1a';
-    ctx.beginPath();
-    ctx.moveTo(startX, 0);
-    ctx.bezierCurveTo(flatLeft, 0, flatLeft, tabH, flatLeft + curveW, tabH);
-    ctx.lineTo(flatRight - curveW, tabH);
-    ctx.bezierCurveTo(flatRight, tabH, flatRight, 0, endX, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Add strong shadow and draw twice so the white text in the logo is very clear!
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,1)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    const l2x = flatLeft + flatW / 2 - l2w / 2;
-    const l2y = tabH / 2 - l2h / 2 + 2;
-    ctx.drawImage(logo2, l2x, l2y, l2w, l2h);
-    ctx.drawImage(logo2, l2x, l2y, l2w, l2h); // Draw again for a bolder shadow
-    ctx.restore();
-  }
-
-  /* white fade */
-  linG(ctx, 0, CARD_Y - 80, W, 100, [[0, 'rgba(240,236,232,0)'], [1, 'rgba(240,236,232,1)']]);
-
-  /* white card */
-  ctx.fillStyle = '#323232';
-  roundedRect(ctx, 0, CARD_Y, W, CARD_H, 0);
-
-  /* subtle dot texture */
-  ctx.save(); ctx.globalAlpha = .04;
-  for (let dy = CARD_Y; dy < H - ah; dy += 18) for (let dx = 0; dx < W; dx += 18) {
-    ctx.beginPath(); ctx.arc(dx, dy, 2, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
-  } ctx.restore();
-
-  /* ── World map watermark (greyscale, lower position) ── */
-  ctx.save();
-  ctx.filter = 'grayscale(100%)';
-  ctx.globalAlpha = 0.18;
-  ctx.font = 'bold 480px serif';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🌐', W + 80, CARD_Y + CARD_H * 0.65);
-  ctx.filter = 'none';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.restore();
-
-  /* ── LOGO: centered on boundary line, no circle/arc bg ── */
-  const lmw = 260, lh = logo ? Math.round(logo.height / logo.width * lmw) : 50;
-  const lcy = CARD_Y;
-  drawLogo(ctx, W / 2 - lmw / 2, lcy + lh / 2 - 6, lmw, 'left', 1);
-
-  /* headline — CENTER aligned, below logo */
-  const bfs = d.hlFs, blh = bfs * 1.4, bmw = W - 80;
-  let curY = lcy + lh / 2 + d.hlY;
-  ctx.fillStyle = '#fff'; ctx.font = `bold ${bfs}px Noto Serif Bengali`; nosh(ctx);
-  ctx.textAlign = 'center';
-  const lines = wrapC(ctx, d.hl, W / 2, curY, bmw, blh);
-
-  // Body text on next line, smaller
-  let bodyLines = 0;
-  curY += lines * blh;
-  if (d.body) {
-    const bodyFs = 32, bodyLh = bodyFs * 1.5;
-    curY += 20; // gap
-    ctx.font = `normal ${bodyFs}px Noto Sans Bengali`;
-    bodyLines = wrapC(ctx, d.body, W / 2, curY, bmw, bodyLh);
-    curY += bodyLines * bodyLh;
-  }
-
-  /* ── "বিস্তারিত কমেন্টে" pill button ── */
-  {
-    const pillTxt = 'বিস্তারিত কমেন্টে';
-    ctx.font = 'bold 26px Noto Sans Bengali';
-    const pillTw = ctx.measureText(pillTxt).width;
-    const pillW = pillTw + 56, pillH = 56, pillR = 28;
-    const pillX = W / 2 - pillW / 2;
-    const pillY2 = curY + 36;
-    ctx.save();
-    ctx.strokeStyle = '#c0392b';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(pillX + pillR, pillY2);
-    ctx.lineTo(pillX + pillW - pillR, pillY2);
-    ctx.arc(pillX + pillW - pillR, pillY2 + pillR, pillR, -Math.PI / 2, Math.PI / 2);
-    ctx.lineTo(pillX + pillR, pillY2 + pillH);
-    ctx.arc(pillX + pillR, pillY2 + pillR, pillR, Math.PI / 2, 3 * Math.PI / 2);
-    ctx.closePath();
-    ctx.fillStyle = 'rgba(192,57,43,0.10)';
-    ctx.fill();
-    ctx.stroke();
-    ctx.fillStyle = '#8b1a1a';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(pillTxt, W / 2, pillY2 + pillH / 2);
-    ctx.textBaseline = 'alphabetic';
-    ctx.restore();
-  }
-
-  /* speaker attribution — bottom right */
-  const attrY = curY + 40;
-  if (d.sp) {
-    ctx.textAlign = 'right';
-    if (d.des || d.cat) {
-      ctx.font = 'italic 20px Noto Sans Bengali'; ctx.fillStyle = '#777';
-      ctx.fillText((d.des || d.cat) + '...', W - 28, attrY);
-    }
-    ctx.font = `bold 32px Noto Serif Bengali`; ctx.fillStyle = d.accent;
-    ctx.fillText(d.sp, W - 28, attrY + (d.des || d.cat ? 36 : 0));
-    ctx.textAlign = 'center';
-  }
-
-  /* ══════════════════════════════════════
-     RED FOOTER BAR — logo + social icons
-  ══════════════════════════════════════ */
-  const FOOTER_H = 100;
-  const FY = H - ah - FOOTER_H;
-
-  // Dark red bar
-  ctx.fillStyle = '#8b1a1a';
-  ctx.fillRect(0, FY, W, FOOTER_H);
-
-  // Logo (logo2 preferred, fallback to logo)
-  const ftLogo = logo2 || logo;
-  if (ftLogo) {
-    const lH = 62, lW = Math.round(ftLogo.width / ftLogo.height * lH);
-    ctx.save();
-    ctx.shadowBlur = 5; ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.drawImage(ftLogo, 28, FY + (FOOTER_H - lH) / 2, lW, lH);
-    ctx.restore();
-  }
-
-  // Social icons
-  const socIcons = ['f', '▶', '', '♪', '✈', '🌐'];
-  const socLabels = ['f', '▶', '⬤', '♫', '➤', '⊕'];
-  const socColors = ['#1877f2', '#ff0000', '#222', '#111', '#229ed9', '#333'];
-  const iSz = 46, iGap = 14;
-  const totalSocW = socIcons.length * (iSz + iGap) - iGap;
-  let ix = W - totalSocW - 30;
-  const iy = FY + FOOTER_H / 2;
-
-  // Draw custom icons as colored circles with letters
-  const icoDefs = [
-    { bg: '#1877f2', label: 'f', fs: 28, font: 'bold 28px Arial' },
-    { bg: '#ff0000', label: '▶', fs: 20, font: 'bold 20px Arial' },
-    { bg: '#c13584', label: '📷', fs: 20, font: '20px serif' },
-    { bg: '#111', label: '♪', fs: 22, font: 'bold 22px Arial' },
-    { bg: '#229ed9', label: '✈', fs: 20, font: 'bold 20px Arial' },
-    { bg: '#333', label: '🌐', fs: 18, font: '18px serif' },
-  ];
-  icoDefs.forEach(ic => {
-    ctx.save();
-    // Circle
-    ctx.fillStyle = ic.bg;
-    ctx.beginPath();
-    ctx.arc(ix + iSz / 2, iy, iSz / 2, 0, Math.PI * 2);
-    ctx.fill();
-    // Icon letter
-    ctx.fillStyle = '#fff';
-    ctx.font = ic.font;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(ic.label, ix + iSz / 2, iy);
-    ctx.restore();
-    ix += iSz + iGap;
-  });
-
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  drawAd(ctx);
-}
-function T1b(ctx, d) {
-  const ah = adH();
-  const PHOTO_Y = 0;
-  const PHOTO_H = 520;
-  const CARD_Y = 480;
-  const CARD_H = H - ah - CARD_Y;
-
-  /* photo — top-anchored */
-  covT(ctx, img1, 0, PHOTO_Y, W, PHOTO_H + 40, 1, img1Scale);
-
-  /* elegant curved date tab hanging from top right */
-  if (d.date) {
-    ctx.font = `bold 24px Noto Sans Bengali`;
-    const tw = ctx.measureText(d.date).width;
-    const tabH = 50, curveW = 35;
-    const endX = W - 30;
-    const flatRight = endX - curveW;
-    const flatW = tw + 40;
-    const flatLeft = flatRight - flatW;
-    const startX = flatLeft - curveW;
-
-    ctx.fillStyle = '#8b1a1a';
-    ctx.beginPath();
-    ctx.moveTo(startX, 0);
-    ctx.bezierCurveTo(flatLeft, 0, flatLeft, tabH, flatLeft + curveW, tabH);
-    ctx.lineTo(flatRight - curveW, tabH);
-    ctx.bezierCurveTo(flatRight, tabH, flatRight, 0, endX, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#fff';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(d.date, flatLeft + flatW / 2, tabH / 2 + 2);
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
-  }
-
-  /* elegant curved logo tab hanging from top left */
-  if (logo2) {
-    const l2h = 36;
-    const l2w = Math.round(logo2.width / logo2.height * l2h) || 120;
-    const tabH = 50, curveW = 35;
-    const startX = 30;
-    const flatLeft = startX + curveW;
-    const flatW = l2w + 40;
-    const flatRight = flatLeft + flatW;
-    const endX = flatRight + curveW;
-
-    // Use white background to mirror the right tab
-    ctx.fillStyle = '#8b1a1a';
-    ctx.beginPath();
-    ctx.moveTo(startX, 0);
-    ctx.bezierCurveTo(flatLeft, 0, flatLeft, tabH, flatLeft + curveW, tabH);
-    ctx.lineTo(flatRight - curveW, tabH);
-    ctx.bezierCurveTo(flatRight, tabH, flatRight, 0, endX, 0);
-    ctx.closePath();
-    ctx.fill();
-
-    // Add strong shadow and draw twice so the white text in the logo is very clear!
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,1)';
-    ctx.shadowBlur = 6;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
-    const l2x = flatLeft + flatW / 2 - l2w / 2;
-    const l2y = tabH / 2 - l2h / 2 + 2;
-    ctx.drawImage(logo2, l2x, l2y, l2w, l2h);
-    ctx.drawImage(logo2, l2x, l2y, l2w, l2h); // Draw again for a bolder shadow
-    ctx.restore();
-  }
-
-  /* white fade */
-  linG(ctx, 0, CARD_Y - 80, W, 100, [[0, 'rgba(240,236,232,0)'], [1, 'rgba(240,236,232,1)']]);
-
-  /* white card */
-  ctx.fillStyle = '#323232';
-  roundedRect(ctx, 0, CARD_Y, W, CARD_H, 0);
-
-  /* subtle dot texture */
-  ctx.save(); ctx.globalAlpha = .04;
-  for (let dy = CARD_Y; dy < H - ah; dy += 18) for (let dx = 0; dx < W; dx += 18) {
-    ctx.beginPath(); ctx.arc(dx, dy, 2, 0, Math.PI * 2); ctx.fillStyle = '#333'; ctx.fill();
-  } ctx.restore();
-
-  /* ── World map watermark (greyscale, lower position) ── */
-  ctx.save();
-  ctx.filter = 'grayscale(20%)';
-  ctx.globalAlpha = 0.18;
-  ctx.font = 'bold 480px serif';
-  ctx.textAlign = 'right';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('', W + 80, CARD_Y + CARD_H * 0.65);
-  ctx.filter = 'none';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.restore();
-
-  /* headline — CENTER aligned */
-  const bfs = d.hlFs, blh = bfs * 1.4, bmw = W - 80;
-  let curY = CARD_Y + d.hlY;
-  ctx.fillStyle = '#fff'; ctx.font = `bold ${bfs}px Noto Serif Bengali`; nosh(ctx);
-  ctx.textAlign = 'center';
-  const lines = wrapC(ctx, d.hl, W / 2, curY, bmw, blh);
-
-  // Body text on next line, smaller
-  let bodyLines = 0;
-  curY += lines * blh;
-  if (d.body) {
-    const bodyFs = 32, bodyLh = bodyFs * 1.5;
-    curY += 20; // gap
-    ctx.font = `normal ${bodyFs}px Noto Sans Bengali`;
-    bodyLines = wrapC(ctx, d.body, W / 2, curY, bmw, bodyLh);
-    curY += bodyLines * bodyLh;
-  }
-
-  /* ── "বিস্তারিত কমেন্টে" shape (attached to footer) ── */
-  {
-    const FOOTER_H_INT = 90;
-    const FY_INT = H - ah - FOOTER_H_INT;
-    const pillTxt = 'বিস্তারিত কমেন্টে';
-    ctx.font = 'bold 24px Noto Sans Bengali';
-    const pillTw = ctx.measureText(pillTxt).width;
-    const pillW = pillTw + 80, pillH = 70;
-    const pillX = W / 2 - pillW / 2;
-    const pillY2 = FY_INT - pillH;
-
-    ctx.save();
-    ctx.fillStyle = '#8b1a1a';
-    ctx.beginPath();
-    // Start at bottom left (fush with footer)
-    ctx.moveTo(pillX, FY_INT);
-    // Line up to side
-    ctx.lineTo(pillX, FY_INT - pillH * 0.5);
-    // Pointed top middle
-    ctx.lineTo(W / 2, pillY2);
-    // Line down to right side
-    ctx.lineTo(pillX + pillW, FY_INT - pillH * 0.5);
-    // Line down to bottom right
-    ctx.lineTo(pillX + pillW, FY_INT);
-    ctx.closePath();
-    ctx.fill();
-
-    // Text centered inside the shape - moved slightly lower
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(pillTxt, W / 2, FY_INT - pillH * 0.28);
-    ctx.textBaseline = 'alphabetic';
-    ctx.restore();
-  }
-
-  /* speaker attribution — bottom right */
-  const attrY = curY + 40;
-  if (d.sp) {
-    ctx.textAlign = 'right';
-    if (d.des || d.cat) {
-      ctx.font = 'italic 20px Noto Sans Bengali'; ctx.fillStyle = '#777';
-      ctx.fillText((d.des || d.cat) + '...', W - 28, attrY);
-    }
-    ctx.font = `bold 32px Noto Serif Bengali`; ctx.fillStyle = d.accent;
-    ctx.fillText(d.sp, W - 28, attrY + (d.des || d.cat ? 36 : 0));
-    ctx.textAlign = 'center';
-  }
-
-  /* ══════════════════════════════════════
-     RED FOOTER BAR — logo + social icons
-  ══════════════════════════════════════ */
-  const FOOTER_H = 100;
-  const FY = H - ah - FOOTER_H;
-
-  // Dark red bar
-  ctx.fillStyle = '#8b1a1a';
-  ctx.fillRect(0, FY, W, FOOTER_H);
-
-  // Logo (logo2 preferred, fallback to logo)
-  const ftLogo = logo2 || logo;
-  const iSz = 42, iGap = 10;
-  const icoDefs = [
-    { bg: '#1877f2', label: 'f', font: 'bold 26px Arial' },
-    { bg: '#ff0000', label: '▶', font: 'bold 18px Arial' },
-    { bg: '#c13584', label: '📷', font: '18px serif' },
-    { bg: '#111', label: '♪', font: 'bold 20px Arial' },
-    { bg: '#229ed9', label: '✈', font: 'bold 18px Arial' },
-    { bg: '#333', label: '🌐', font: '16px serif' },
-  ];
-  const totalIconsW = icoDefs.length * (iSz + iGap) - iGap;
-
-  // Measure logo width
-  let lH = 0, lW = 0;
-  if (ftLogo) { lH = 58; lW = Math.round(ftLogo.width / ftLogo.height * lH); }
-
-  const logoIconGap = 24; // gap between logo and icon group
-  const totalBlockW = lW + (lW ? logoIconGap : 0) + totalIconsW;
-  const blockStartX = W / 2 - totalBlockW / 2;
-  const iy = FY + FOOTER_H / 2;
-
-  // Draw logo
-  if (ftLogo) {
-    ctx.save();
-    ctx.shadowBlur = 4; ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.drawImage(ftLogo, blockStartX, FY + (FOOTER_H - lH) / 2, lW, lH);
-    ctx.restore();
-  }
-
-  // Draw social icon circles
-  let ix = blockStartX + (lW ? lW + logoIconGap : 0);
-  icoDefs.forEach(ic => {
-    ctx.save();
-    ctx.fillStyle = ic.bg;
-    ctx.beginPath();
-    ctx.arc(ix + iSz / 2, iy, iSz / 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff';
-    ctx.font = ic.font;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(ic.label, ix + iSz / 2, iy);
-    ctx.restore();
-    ix += iSz + iGap;
-  });
-
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  drawAd(ctx);
-}
-
-/* ══════════════════════════════════════════════════════
    T2 — QUOTE SPLIT CARD (reference: left photo + right red quote panel)
    LEFT: portrait photo full height + faint watermark
    RIGHT: dark red bg, logo top, yellow ❝❝, white rounded quote box,
           attribution (yellow em-dash + name), designation, website
 ══════════════════════════════════════════════════════ */
-function T2(ctx, d) {
+function T1(ctx, d) {
   const ah = adH();
   const mainH = H - ah;
   const SPLIT = Math.round(W * .48); // left photo width ~48%
 
   /* ── LEFT: portrait photo full height ── */
-  cov(ctx, img1, 0, 0, SPLIT, mainH, 1, img1Scale);
+  cov(ctx, img1, 0, 0, SPLIT, mainH, 1, img1Scale, img1OffX, img1OffY);
 
   /* ── RIGHT: dark red bg ── */
   ctx.fillStyle = '#b71c1c'; // d.accent might not match the nice red in the reference perfectly. The image uses a rich dark red.
@@ -708,7 +348,7 @@ function T2(ctx, d) {
    T4 — BANGLADESH TIMES STYLE (Reference Image)
    Left curved photo, Red-Dark gradient bg, White text, Pill button
 ══════════════════════════════════════════════════════ */
-function T4(ctx, d) {
+function T2(ctx, d) {
   const ah = adH();
   const mainH = H - ah;
 
@@ -731,7 +371,7 @@ function T4(ctx, d) {
   ctx.clip();
 
   if (img1) {
-    cov(ctx, img1, 0, 0, W * 0.65, mainH, 1, img1Scale);
+    cov(ctx, img1, 0, 0, W * 0.65, mainH, 1, img1Scale, img1OffX, img1OffY);
   } else {
     ctx.fillStyle = '#333'; ctx.fillRect(0, 0, W * 0.65, mainH);
   }
@@ -754,15 +394,16 @@ function T4(ctx, d) {
   }
 
   // 4. Headline (Main Quote)
-  const textX = W * 0.52; // Start after the curve
+  const textX = W * ((d.hlX || 52) / 100); // X position from slider
   const textW = W - textX - 50;
+  const textStartY = (d.hlY || 100) + 120;  // Y position from slider (base 120 + offset)
   ctx.textAlign = 'left';
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 58px Noto Serif Bengali';
-  const hLines = wrap(ctx, d.hl, textX, 220, textW, 85);
+  ctx.font = `bold ${d.hlFs || 58}px Noto Serif Bengali`;
+  const hLines = wrap(ctx, d.hl, textX, textStartY, textW, 85);
 
   // 5. Speaker Name (Yellow with Underline)
-  const speakerY = 220 + (hLines * 85) + 60;
+  const speakerY = textStartY + (hLines * 85) + 60;
   ctx.fillStyle = '#ffff00'; // Bright Yellow
   ctx.font = 'bold 42px Noto Sans Bengali';
   ctx.textAlign = 'right';
@@ -776,425 +417,136 @@ function T4(ctx, d) {
   ctx.lineTo(W - 400, speakerY + 15);
   ctx.stroke();
 
-  // 6. Pill Button (বিস্তারিত কমেন্টে)
-  const pillW = 240, pillH = 60, pillR = 30;
-  const pillX = W * 0.55, pillY = mainH - 120;
-
-  ctx.fillStyle = '#fff';
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
-  } else {
-    ctx.rect(pillX, pillY, pillW, pillH); // Fallback
-  }
-  ctx.fill();
-
-  ctx.fillStyle = '#a50000';
-  ctx.font = 'bold 26px Noto Sans Bengali';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('বিস্তারিত কমেন্টে', pillX + pillW / 2, pillY + pillH / 2);
-  ctx.textBaseline = 'alphabetic';
-
+  // 6. Pill Button removed as requested
   // 7. Footer Ad Area
   drawAd(ctx);
 }
 
 /* ══════════════════════════════════════════════════════
-   T5 — ডার্ক কোট (Dark Quote / Bangladesh Times Style)
-   Full red gradient, large quote, bottom diagonal shapes, person on right
+   T3 — PERFECT GEOMETRIC SLANT (Ref: Image 2)
+   Fixed intercepts to match the massive Dark Red band and layout
 ══════════════════════════════════════════════════════ */
-function T5(ctx, d) {
+/* ══════════════════════════════════════════════════════
+   T3 — PERFECT GEOMETRIC SLANT (Ref: Image 3/4)
+   Fixed intercepts to match the massive Dark Red band and layout
+══════════════════════════════════════════════════════ */
+function T3(ctx, d) {
   const ah = adH();
-  const mainH = H - ah; // Canvas height without ad
-  
-  // 1. Red Gradient Background
-  const bg = ctx.createLinearGradient(0, 0, 0, mainH);
-  bg.addColorStop(0, '#560000'); // Dark maroon
-  bg.addColorStop(0.5, '#7a0000'); // Mid red
-  bg.addColorStop(1, '#9e0000'); // Bottom before shapes, dark red to highlight white
-  ctx.fillStyle = bg;
+  const mainH = H - ah;
+
+  const fillAbove = (color, c) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    if (c >= 0) {
+      ctx.moveTo(0, c);
+      ctx.lineTo(W, W + c);
+      ctx.lineTo(W, 0);
+      ctx.lineTo(0, 0);
+    } else {
+      ctx.moveTo(-c, 0);
+      ctx.lineTo(W, W + c);
+      ctx.lineTo(W, 0);
+    }
+    ctx.fill();
+  };
+
+  // Base Beige
+  ctx.fillStyle = '#E5E3DB';
   ctx.fillRect(0, 0, W, mainH);
 
-  // Faint diagonal rays watermark
-  ctx.save();
-  ctx.globalAlpha = 0.03;
+  // Layers from bottom-up
+  fillAbove('#5A473E', 800);  // Shadow Brown
+  fillAbove('#48494B', 650);  // Dark Grey
+  fillAbove('#811D1E', 450);  // Dark Red (massive central coverage)
+  fillAbove('#68483B', -500); // Main Brown (Top Right corner)
+
+  // Bright Red overlay (Bottom Right)
+  ctx.fillStyle = '#D61214';
   ctx.beginPath();
-  for(let i = -W; i < W*2; i += 120) {
-     ctx.moveTo(i, 0);
-     ctx.lineTo(i - 800, mainH);
+  ctx.moveTo(W, mainH - 350);
+  ctx.lineTo(W - 450, mainH);
+  ctx.lineTo(W, mainH);
+  ctx.fill();
+
+  // Faint watermark
+  ctx.save();
+  ctx.globalAlpha = 0.05;
+  ctx.fillStyle = '#000';
+  ctx.font = 'bold 90px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('Nogor Somachar 24', W / 2 + 50, mainH - 220);
+  ctx.restore();
+
+  // Quote marks
+  ctx.fillStyle = '#0F0F0F';
+  ctx.font = 'bold 240px Arial, serif';
+  ctx.textBaseline = 'top';
+  nosh(ctx);
+  ctx.fillText('“', 100, 60);
+  ctx.textBaseline = 'alphabetic';
+
+  // True Logo explicitly un-filtered
+  const logoX = W - 50;
+  if (rawLogo && rawLogo.width) {
+    const lH = 80;
+    const lW = (rawLogo.width / rawLogo.height) * lH;
+    ctx.drawImage(rawLogo, logoX - lW, 50, lW, lH);
   }
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 40;
+
+  // Centered Quote Text
+  const textX = W / 2;
+  const textW = W - 180;
+  // Make sure it starts lower, avoiding logo collision even if hlY=100
+  const textStartY = d.hlY + 80;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff';
+  ctx.font = `normal ${d.hlFs || 46}px Noto Sans Bengali, sans-serif`;
+  nosh(ctx);
+  const hLines = wrapC(ctx, d.hl, textX, textStartY, textW, (d.hlFs || 46) * 1.6);
+
+  // Speaker Name
+  ctx.textAlign = 'left';
+  const speakerY = textStartY + (hLines * (d.hlFs || 46) * 1.6) + 70;
+
+  ctx.fillStyle = '#ECA93A'; // Golden Yellow
+  ctx.font = 'bold 46px Noto Sans Bengali, Arial';
+  ctx.fillText(d.sp || 'ইশতিয়াক আহমেদ সিদ্দিকী', 100, speakerY);
+
+  // Divider
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(100, speakerY + 28);
+  ctx.lineTo(480, speakerY + 28);
   ctx.stroke();
-  ctx.restore();
 
-  // 2. White Polygon (Starting from bottom-left, sloping UP to the right)
-  const wLeftY = mainH - 240; // Left side anchor
-  const wRightY = mainH - 450; // Right side anchor
+  // Designation
+  ctx.fillStyle = '#E8E8E8';
+  ctx.font = 'normal 26px Noto Sans Bengali';
+  ctx.fillText(d.des || 'প্রথম যুগ্ম-সম্পাদক, সিলেট জেলা বিএনপি।', 100, speakerY + 75);
 
-  // Add shadow for depth
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.5)';
-  ctx.shadowBlur = 15;
-  ctx.shadowOffsetY = -5;
-  ctx.beginPath();
-  ctx.moveTo(0, wLeftY);
-  ctx.lineTo(W, wRightY);
-  ctx.lineTo(W, mainH);
-  ctx.lineTo(0, mainH);
-  ctx.closePath();
-  ctx.fillStyle = '#ffffff';
-  ctx.fill();
-  ctx.restore();
+  // Date
+  if (d.date) {
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 44px Noto Sans Bengali';
+    ctx.fillText(d.date, 80, mainH - 80);
+  }
 
-  // Draw a subtle grey line at the border
-  ctx.beginPath();
-  ctx.moveTo(0, wLeftY);
-  ctx.lineTo(W, wRightY);
-  ctx.lineTo(W, wRightY + 8);
-  ctx.lineTo(0, wLeftY + 8);
-  ctx.closePath();
-  ctx.fillStyle = '#dcdcdc';
-  ctx.fill();
-
-  // 3. Red Triangle (Bottom Right corner)
-  const tLeftX = W * 0.45;
-  const tRightY = mainH - 220; 
-  ctx.save();
-  ctx.shadowColor = 'rgba(0,0,0,0.4)';
-  ctx.shadowBlur = 10;
-  ctx.beginPath();
-  ctx.moveTo(tLeftX, mainH);
-  ctx.lineTo(W, tRightY);
-  ctx.lineTo(W, mainH);
-  ctx.closePath();
-  ctx.fillStyle = '#9e0000'; // Match dark red
-  ctx.fill();
-  ctx.restore();
-
-  // 4. Photo (img1) aligned to the right side
+  // Person Image
   if (img1) {
     ctx.save();
-    const iw = img1.width, ih = img1.height;
-    // Base scale adjustment
-    const drawH = mainH * 0.7 * img1Scale; // Default covers ~70% height
-    const drawW = (iw / ih) * drawH;
-    const drawX = W - drawW - 20; // 20px padding from right
-    const drawY = mainH - drawH; // Flush with the ad boundary
-    
-    // Draw directly over the shapes (like reference)
-    ctx.drawImage(img1, drawX, drawY, drawW, drawH);
+    const ih = mainH * 0.58 * img1Scale;
+    const iw = (img1.width / img1.height) * ih;
+    const drawX = W - iw + img1OffX;
+    const drawY = mainH - ih + img1OffY;
+    ctx.drawImage(img1, drawX, drawY, iw, ih);
     ctx.restore();
   }
 
-  // 5. Text elements (Quote icon, Quote, Speaker, Designation)
-  const textX = 50;
-  let textY = 100;
-
-  // Quote Icon `❝`
-  ctx.font = 'bold 120px Georgia, serif';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText('“', textX - 10, textY + 20); // slightly adjust for Georgia glyph box
-  textY += 60;
-
-  // Quote Text
-  if (d.hl) {
-    ctx.font = `bold ${d.hlFs || 45}px Noto Serif Bengali`;
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'left';
-    nosh(ctx);
-    
-    // We need space on the right so text doesn't overlap the person
-    const txtW = W * 0.55; 
-    const lh = (d.hlFs || 45) * 1.5; // Line height
-    
-    const words = d.hl.split(' ');
-    let line = '';
-    for(let i=0; i<words.length; i++) {
-       let testLine = line + words[i] + ' ';
-       let metrics = ctx.measureText(testLine);
-       if (metrics.width > txtW && i > 0) {
-           ctx.fillText(line, textX, textY);
-           line = words[i] + ' ';
-           textY += lh;
-       } else {
-           line = testLine;
-       }
-    }
-    ctx.fillText(line, textX, textY);
-    textY += lh + 20;
-  }
-
-  // Speaker name
-  if (d.sp) {
-    ctx.font = 'bold 50px Noto Sans Bengali';
-    ctx.fillStyle = '#ffcc00'; // Distinct Yellow
-    ctx.fillText(d.sp, textX, textY);
-    textY += 50;
-  }
-
-  // Designation (Black Pill/Rectangle Box)
-  if (d.des) {
-    ctx.font = 'normal 30px Noto Sans Bengali';
-    const desW = ctx.measureText(d.des).width + 30; // padding
-    const desH = 50;
-    
-    ctx.fillStyle = '#050505'; // Black
-    ctx.fillRect(textX, textY, desW, desH); // Drawing a sharp rectangle
-
-    ctx.fillStyle = '#ffffff';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(d.des, textX + 15, textY + desH/2);
-    ctx.textBaseline = 'alphabetic'; // Reset
-  }
-
-  // 6. Footer Content (Logo on White, Date/Web on Red)
-  // Logo
-  const lg = logo2 || logo;
-  if (lg) {
-    // Left-aligned in the white triangle area
-    const lH = 65;
-    const lW = Math.round((lg.width / lg.height) * lH);
-    const lX = 50;
-    const lY = mainH - lH - 30;
-    ctx.drawImage(lg, lX, lY, lW, lH);
-  }
-
-  // Right-aligned elements: Date and Website
-  ctx.textAlign = 'right';
-  if (d.date) {
-    ctx.font = 'bold 28px Noto Sans Bengali';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(d.date, W - 40, mainH - 70);
-  }
-  
-  if (d.web) {
-    ctx.font = 'bold 26px Arial, Noto Sans Bengali';
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(d.web, W - 40, mainH - 30);
-  }
-  ctx.textAlign = 'left';
-
-  // 7. Advertisement (already handled centrally)
+  // Footer Ad Area
   drawAd(ctx);
 }
 
-/* ── T6 SPECIFIC HELPERS ── */
-
-// ১. সাদা থেকে গ্রে (Ombre) গ্রেডিয়েন্ট ব্যাকগ্রাউন্ডের জন্য
-function drawOmbreBackground(ctx, h) {
-  const g = ctx.createLinearGradient(0, 0, 0, h);
-  g.addColorStop(0, '#ffffff'); // পিওর সাদা (ওপরে)
-  g.addColorStop(0.3, '#f2f2f2'); // হালকা গ্রে
-  g.addColorStop(1, '#d9d9d9');   // একটু গাঢ় গ্রে (নিচে যেখানে লাল বার শুরু)
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, h);
-}
-
-// ২. ছবির জন্য রাউন্ডেড এবং শ্যাডো ফ্রেম (image_2.png-এর মতো)
-function drawImageFrame(ctx, x, y, w, h) {
-  const r = 15; // কোণাগুলো একটু গোল
-  ctx.save();
-  // শ্যাডো (Drop Shadow)
-  ctx.shadowColor = 'rgba(0,0,0,0.3)';
-  ctx.shadowBlur = 15;
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = 5;
-
-  // সাদা ফ্রেম/ব্যাকগ্রাউন্ড
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    // Fallback if roundRect is not supported
-    ctx.rect(x, y, w, h);
-  }
-  ctx.fill();
-  ctx.restore();
-
-  // এটি একটি ক্লিপিং পাথ হিসেবেও কাজ করবে যাতে ছবি ফ্রেমের বাইরে না যায়
-  ctx.beginPath();
-  if (ctx.roundRect) {
-    ctx.roundRect(x, y, w, h, r);
-  } else {
-    ctx.rect(x, y, w, h);
-  }
-  ctx.clip();
-}
-
-/* ══════════════════════════════════════════════════════
-   T6 — PHOTOGRAPHY FRAME
-   Top half photo, red divider, dark lower half, custom footer
-══════════════════════════════════════════════════════ */
-function T6(ctx, d) {
-  const ah = adH();
-  const mainH = H - ah; // 1080 if ad is off, 960 if ad is on
-
-  const splitY = mainH * 0.58; // Red bar position
-
-  // 1. Photo Area (Top)
-  if (img1) {
-    cov(ctx, img1, 0, 0, W, splitY, 1, img1Scale);
-  } else {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, W, splitY);
-  }
-
-  // Falloff gradient at the very top for Date visibility
-  const tg = ctx.createLinearGradient(0, 0, 0, 100);
-  tg.addColorStop(0, 'rgba(0,0,0,0.5)');
-  tg.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = tg;
-  ctx.fillRect(0, 0, W, 120);
-
-  // Top Left Date
-  if (d.date) {
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'normal 38px Noto Sans Bengali';
-    ctx.textAlign = 'left';
-    ctx.fillText(d.date, 30, 60);
-  }
-
-  // 2. Thick Red Divider with Faint Watermark Text
-  const redH = 50;
-  ctx.fillStyle = '#c0392b';
-  ctx.fillRect(0, splitY, W, redH);
-
-  ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.15)'; // Faint dark watermark
-  ctx.font = 'bold 44px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('Nogor Somachar 24', W / 2, splitY + redH / 2 + 2);
-  ctx.restore();
-
-  // 3. Dark Grey Bottom Area
-  const darkY = splitY + redH;
-  const darkH = mainH - darkY - 80;
-  ctx.fillStyle = '#2b2b2b';
-  ctx.fillRect(0, darkY, W, darkH);
-
-  // Photo Credit (Top Right of Dark Area)
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'normal 30px Noto Sans Bengali';
-  ctx.textAlign = 'right';
-  ctx.fillText(d.sp || 'ছবি: সংগৃহীত', W - 30, darkY + 45);
-
-  // Faint Globe Watermark in Dark Area
-  ctx.save();
-  ctx.fillStyle = 'rgba(255,255,255,0.04)';
-  ctx.font = 'bold 380px serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🌐', W / 2, darkY + darkH / 2);
-  ctx.restore();
-
-  // Headline inside Dark Area (Centered)
-  if (d.hl && d.hl !== 'শিরোনাম') {
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${d.hlFs || 48}px Noto Serif Bengali`;
-    ctx.textAlign = 'center';
-    nosh(ctx);
-    wrapC(ctx, d.hl, W / 2, darkY + 140, W - 80, (d.hlFs || 48) * 1.4);
-  }
-
-  // 4. Custom Footer (White Left + Red Right)
-  const ftY = mainH - 80;
-
-  // Base is red
-  ctx.fillStyle = '#c0392b';
-  ctx.fillRect(0, ftY, W, 80);
-
-  // Measure Logo to size the white box exactly
-  const lg = logo2 || logo;
-  let lH = 66, lW = 350; // increased logo height to match reference
-  if (lg) {
-    lW = Math.round((lg.width / lg.height) * lH);
-  }
-  const whiteW = 20 + lW + 20; // Exact fit padding to match sharp cutoff
-
-  // White box on the left
-  ctx.fillStyle = '#c0392b';
-  ctx.fillRect(0, ftY, whiteW, 80);
-
-  if (lg) {
-    ctx.drawImage(lg, 20, ftY + (80 - lH) / 2, lW, lH);
-  }
-
-  // Social Icons with exact brand colors inside white circles
-  const socIcons = [
-    { bg: '#1877f2', txt: 'f', font: 'bold 26px Arial', r: 20 },
-    { bg: '#ff0000', txt: '▶', font: '16px Arial', r: 20 },
-    { bg: 'transparent', txt: '📷', font: '24px serif', r: 20 }, // Insta fallback
-    { bg: '#000000', txt: '♪', font: 'bold 22px Arial', r: 20 },
-    { bg: '#229ed9', txt: '✈', font: 'bold 20px Arial', r: 20 }
-  ];
-  let ix = whiteW + 35; // gap between white box and first icon
-  let iy = ftY + 40;
-  ctx.save();
-  socIcons.forEach(ic => {
-    // White background ring
-    ctx.beginPath(); ctx.arc(ix, iy, ic.r + 2, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff'; ctx.fill();
-
-    if (ic.bg !== 'transparent') {
-      ctx.beginPath(); ctx.arc(ix, iy, ic.r, 0, Math.PI * 2);
-      ctx.fillStyle = ic.bg; ctx.fill();
-    } else {
-      // Instagram gradient
-      const ig = ctx.createLinearGradient(ix - ic.r, iy - ic.r, ix + ic.r, iy + ic.r);
-      ig.addColorStop(0, '#f09433'); ig.addColorStop(0.3, '#e6683c');
-      ig.addColorStop(0.6, '#dc2743'); ig.addColorStop(1, '#bc1888');
-      ctx.beginPath(); ctx.arc(ix, iy, ic.r, 0, Math.PI * 2);
-      ctx.fillStyle = ig; ctx.fill();
-    }
-    // Icon text symbol
-    ctx.fillStyle = '#fff';
-    ctx.font = ic.font;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(ic.txt, ix, iy);
-    ix += 50; // closer gap between icons
-  });
-  ctx.restore();
-
-  // Dark Pill button "বিস্তারিত কমেন্টে.." on the far right
-  const pillTxt = 'বিস্তারিত কমেন্টে..';
-  ctx.font = 'bold 24px Noto Sans Bengali';
-  const textW = ctx.measureText(pillTxt).width;
-
-  // Custom pill rendering with globe icon
-  // the globe emoji can have slightly unpredictable width, let's assume 30px width
-  const globeW = 30;
-  const pillPadding = 25;
-  const pillW = pillPadding + globeW + 8 + textW + pillPadding;
-  const pillH = 50, pillR = 25;
-  const pillX = W - pillW - 20; // 20px right margin
-  const pillY = ftY + (80 - pillH) / 2;
-
-  ctx.fillStyle = '#1a1a1a';
-  ctx.beginPath();
-  if (ctx.roundRect) ctx.roundRect(pillX, pillY, pillW, pillH, pillR);
-  else { ctx.rect(pillX, pillY, pillW, pillH); }
-  ctx.fill();
-
-  ctx.fillStyle = '#5dade2'; // Light blue globe
-  ctx.font = '22px Arial';
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('🌐', pillX + pillPadding, ftY + 40 + 2); // visually centered
-
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 24px Noto Sans Bengali';
-  ctx.fillText(pillTxt, pillX + pillPadding + globeW + 8, ftY + 40 + 2);
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-
-  // Advertisement space
-  drawAd(ctx);
-}
 
 function roundedRect(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arc(x + w - r, y + r, r, -Math.PI / 2, 0);
@@ -1202,9 +554,165 @@ function roundedRect(ctx, x, y, w, h, r) {
   ctx.closePath(); ctx.fill();
 }
 
+
+/* ══════════════════════════════════════════════════════
+   T7 — AGAMIR SOMOY STYLE (exact reference match)
+   - Black bg
+   - Photo top ~57%
+   - Date right-aligned + thin underline
+   - Headline right-aligned, large bold
+   - বিস্তারিত কমেন্টে LEFT side
+   - Big red triangle bottom-left
+   - Logo + website bottom-right
+══════════════════════════════════════════════════════ */
+function wrapR(ctx, txt, rx, y, mw, lh) {
+  /* right-aligned word wrap — rx is the right edge X */
+  if (!txt) return 0;
+  const ws = txt.split(' '); let ln = '', ls = [];
+  for (const w of ws) {
+    const t = ln ? ln + ' ' + w : w;
+    if (ctx.measureText(t).width > mw && ln) { ls.push(ln); ln = w; }
+    else ln = t;
+  }
+  ls.push(ln);
+  ls.forEach((l, i) => ctx.fillText(l, rx, y + i * lh));
+  return ls.length;
+}
+
+function T7(ctx, d) {
+  const ah = adH();
+  const mainH = H - ah;
+
+  /* 1. Pure black background */
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, W, mainH);
+
+  /* 2. Photo — top 57% */
+  const photoH = Math.round(mainH * 0.57);
+  if (img1) {
+    cov(ctx, img1, 0, 0, W, photoH, 1, img1Scale, img1OffX, img1OffY);
+    // Hard fade to black at bottom of photo
+    const fadeG = ctx.createLinearGradient(0, photoH - 90, 0, photoH + 10);
+    fadeG.addColorStop(0, 'rgba(0,0,0,0)');
+    fadeG.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = fadeG;
+    ctx.fillRect(0, photoH - 90, W, 100);
+  } else {
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(0, 0, W, photoH);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.font = 'bold 32px Noto Sans Bengali';
+    ctx.textAlign = 'center';
+    ctx.fillText('ছবি আপলোড করুন', W / 2, photoH / 2);
+    ctx.textAlign = 'left';
+  }
+
+  /* 3. Layout metrics */
+  const footerH = 240;
+  const fY = mainH - footerH;
+  const textAreaY = photoH;
+
+  /* 4. Date — right aligned, with thin full-width underline */
+  const dateY = textAreaY + 56;
+  if (d.date) {
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.font = '27px Noto Sans Bengali';
+    ctx.textAlign = 'right';
+    ctx.fillText(d.date, W - 44, dateY);
+    ctx.textAlign = 'left';
+  }
+  // Thin separator line below date
+  ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(44, dateY + 14);
+  ctx.lineTo(W - 44, dateY + 14);
+  ctx.stroke();
+
+  /* 5. Headline — right-aligned, bold, large */
+  const hlFontSize = d.hlFs || 60;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
+  nosh(ctx);
+  ctx.textAlign = 'right';
+  const hlY = dateY + 62;
+  const hlMaxW = W - 88;
+  const lh = hlFontSize * 1.42;
+  const hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
+  ctx.textAlign = 'left';
+
+  /* 6. Footer background */
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, fY, W, footerH);
+
+  /* 7. Red Triangle — BIG, bottom-left, rises above footer */
+  ctx.beginPath();
+  ctx.moveTo(0, mainH);              // bottom-left corner
+  ctx.lineTo(0, fY - 40);            // tall — rises 40px above footer top
+  ctx.lineTo(W * 0.40, mainH);       // wide — 40% of card width along bottom
+  ctx.closePath();
+  ctx.fillStyle = '#c0392b';
+  ctx.fill();
+
+  /* 8. বিস্তারিত কমেন্টে — RIGHT side, top of footer, above logo */
+  const iconR = 20;
+  const btnRowY = fY + 44;           // top of footer + padding
+  // Measure text to right-align everything
+  ctx.font = '30px Noto Sans Bengali';
+  const btnLabel = 'বিস্তারিত কমেন্টে';
+  const labelW = ctx.measureText(btnLabel).width;
+  const iconGap = 14;
+  const totalBtnW = iconR * 2 + iconGap + labelW;
+  const btnRightEdge = W - 36;
+  const iconX = btnRightEdge - totalBtnW + iconR;
+  const iconCY = btnRowY;
+  // Red circle
+  ctx.beginPath();
+  ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
+  ctx.fillStyle = '#c0392b';
+  ctx.fill();
+  // White arrow
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('›', iconX, iconCY);
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'left';
+  // Label right-aligned
+  ctx.fillStyle = 'rgba(255,255,255,0.88)';
+  ctx.font = '30px Noto Sans Bengali';
+  ctx.fillText(btnLabel, iconX + iconR + iconGap, btnRowY + iconR - 2);
+
+  /* 9. Logo — right side, below বিস্তারিত কমেন্টে */
+  const logoSrc = rawLogo || logo2 || logo;
+  if (logoSrc && logoSrc.width) {
+    const lH = 80;
+    const lW = (logoSrc.width / logoSrc.height) * lH;
+    const lX = W - lW - 36;
+    const lY = fY + 78;              // pushed lower, below the button row
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.drawImage(logoSrc, lX, lY, lW, lH);
+    ctx.restore();
+  }
+
+  /* 10. Website URL — bottom-right */
+  if (d.web) {
+    ctx.fillStyle = 'rgba(255,255,255,0.58)';
+    ctx.font = '22px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(d.web, W - 36, mainH - 18);
+    ctx.textAlign = 'left';
+  }
+
+  drawAd(ctx);
+}
+
+
 /* ── dispatch ── */
-const FNS = [T1, T1b, T2, T4, T5, T6];
-const TNAMES = ['আর্টিকেল স্টাইল', 'ফুল ব্লিড রেড', 'বর্ডার ফ্রেম', 'সার্কুলার স্প্লিট', 'ডার্ক কোট', 'ফটোগ্রাফি ফ্রেম'];
+const FNS = [T1, T2, T3, T7];
+const TNAMES = ['আর্টিকেল স্টাইল', 'ফুল ব্লিড রেড', 'ইশতিয়াক স্টাইল', 'আগামীর সময় স্টাইল (T7)'];
 
 function drawT(ctx, idx) { ctx.clearRect(0, 0, W, H); FNS[idx](ctx, inp()); }
 function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }
@@ -1245,21 +753,103 @@ function toggleAd() {
   rf(); rth();
 }
 
+let origImg1 = null;
 function loadImg(file, slot) {
   if (!file) return;
   const r = new FileReader();
   r.onload = e => {
     const im = new Image(); im.onload = () => {
-      if (slot === 1) { img1 = im; $('ub1').classList.add('on'); $('ub1').querySelector('p').textContent = '✓ ফটো লোড'; }
-      else if (slot === 2) { img2 = im; $('ub2').classList.add('on'); $('ub2').querySelector('p').textContent = '✓ ফটো ২ লোড'; }
-      else { adImg = im; $('ubAd').classList.add('on'); $('ubAd').querySelector('p').textContent = '✓ বিজ্ঞাপন লোড'; }
+      const strip = $('imgPreviewStrip');
+      const thumb = document.createElement('img');
+      thumb.src = im.src;
+      thumb.style.height = '36px'; thumb.style.border = '2px solid #1f2937'; thumb.style.borderRadius = '4px';
+
+      if (slot === 1) {
+        img1 = im;
+        origImg1 = im;
+        $('ub1').classList.add('on');
+        $('upLabel').textContent = '✓ মেইন ফটো লোড';
+        if (strip) { strip.appendChild(thumb); }
+        $('imgCtrlTarget').value = "1"; updateImgCtrlUI();
+        const b = $('btnRemoveBg');
+        if (b) b.style.display = 'block';
+      }
+      else if (slot === 2) {
+        img2 = im;
+        $('upLabel').textContent = '✓ মেইন ও ২য় ফটো';
+        if (strip) { strip.appendChild(thumb); }
+      }
+      else {
+        adImg = im;
+        $('ubAd').classList.add('on');
+        $('ubAd').querySelector('p').textContent = '✓ বিজ্ঞাপন লোড';
+        $('imgCtrlTarget').value = "3"; updateImgCtrlUI();
+      }
       rf(); rth();
     }; im.src = e.target.result;
   }; r.readAsDataURL(file);
 }
-$('up1').addEventListener('change', e => loadImg(e.target.files[0], 1));
-$('up2').addEventListener('change', e => loadImg(e.target.files[0], 2));
+
+$('up1').addEventListener('change', e => {
+  const files = e.target.files;
+  if (!files || !files.length) return;
+  const strip = $('imgPreviewStrip');
+  if (strip) { strip.style.display = 'flex'; strip.innerHTML = ''; }
+  loadImg(files[0], 1);
+  if (files.length > 1) {
+    loadImg(files[1], 2);
+  }
+});
+
+$('btnRemoveBg')?.addEventListener('click', () => {
+  if (!img1 || !origImg1) return;
+  const b = $('btnRemoveBg');
+  b.textContent = '⏳ রিমুভ হচ্ছে...';
+  b.disabled = true;
+  
+  setTimeout(() => {
+    removeWhiteBgFloodFill(origImg1, (resImg) => {
+      img1 = resImg; 
+      b.textContent = '✅ ব্যাকগ্রাউন্ড রিমুভড!';
+      setTimeout(()=> { b.textContent = '🪄 ম্যাজিক ব্যাকগ্রাউন্ড রিমুভ'; b.disabled = false; }, 2000);
+      rf(); rth();
+    });
+  }, 50); 
+});
+
 $('upAd').addEventListener('change', e => loadImg(e.target.files[0], 3));
+
+function updateImgCtrlUI() {
+  if (!$('imgCtrlTarget')) return;
+  const val = parseInt($('imgCtrlTarget').value);
+  let s = 1.0, x = 0, y = 0;
+  if (val === 1) { s = img1Scale; x = img1OffX; y = img1OffY; }
+  else if (val === 2) { s = img2Scale; x = img2OffX; y = img2OffY; }
+  else if (val === 3) { s = adImgScale; x = adImgOffX; y = adImgOffY; }
+
+  $('scU').value = s * 100; $('scUval').textContent = Math.round(s * 100) + '%';
+  $('imUx').value = x; $('imUxval').textContent = x + 'px';
+  $('imUy').value = y; $('imUyval').textContent = y + 'px';
+}
+
+function handleImgCtrlChange(type, val) {
+  const target = parseInt($('imgCtrlTarget').value);
+  const v = (type === 'scale') ? (val / 100) : parseInt(val);
+
+  if (target === 1) {
+    if (type === 'scale') img1Scale = v; else if (type === 'x') img1OffX = v; else img1OffY = v;
+  } else if (target === 2) {
+    if (type === 'scale') img2Scale = v; else if (type === 'x') img2OffX = v; else img2OffY = v;
+  } else if (target === 3) {
+    if (type === 'scale') adImgScale = v; else if (type === 'x') adImgOffX = v; else adImgOffY = v;
+  }
+
+  if (type === 'scale') $('scUval').textContent = val + '%';
+  else if (type === 'x') $('imUxval').textContent = val + 'px';
+  else if (type === 'y') $('imUyval').textContent = val + 'px';
+
+  rf(); rth();
+}
 ['headline', 'bodytext', 'speaker', 'designation', 'catdate', 'website'].forEach(id => $(id).addEventListener('input', () => { rf(); rth(); }));
 $('category').addEventListener('change', () => { rf(); rth(); });
 
@@ -1271,4 +861,4 @@ function dl(fmt = 'png') {
   a.href = c.toDataURL(mime, .96); a.click();
 }
 
-buildColors(); rth(); rf();
+buildColors(); rth(); updateImgCtrlUI(); rf();

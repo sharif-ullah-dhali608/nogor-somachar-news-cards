@@ -528,11 +528,20 @@
             .actions {
                 margin-top: 0
             }
-            
+
             /* Mobile interaction states */
-            .sb:not(.show-inputs) #editorInputs { display: none !important; }
-            .sb.show-inputs #sec-templates { display: none !important; }
-            #mobileEditWrap { display: block !important; padding: 16px 14px; }
+            .sb:not(.show-inputs) #editorInputs {
+                display: none !important;
+            }
+
+            .sb.show-inputs #sec-templates {
+                display: none !important;
+            }
+
+            #mobileEditWrap {
+                display: block !important;
+                padding: 16px 14px;
+            }
         }
 
         /* Tiny phones (≤ 380px) */
@@ -553,6 +562,7 @@
             flex-direction: column;
             flex: 1;
         }
+
         #mobileEditWrap {
             display: none;
         }
@@ -580,96 +590,123 @@
             </div>
 
             <div id="mobileEditWrap">
-                <button class="btn br" id="mobileEditBtn" onclick="toggleMobileInputs()" style="font-size: 1rem; padding: 14px;">কন্টেন্ট ও ছবি যোগ করুন ✎</button>
+                <button class="btn br" id="mobileEditBtn" onclick="toggleMobileInputs()"
+                    style="font-size: 1rem; padding: 14px;">কন্টেন্ট ও ছবি যোগ করুন ✎</button>
             </div>
 
             <div id="editorInputs">
                 <div class="sec">
                     <h3>🖼 ফটো আপলোড</h3>
-                <div class="upr">
-                    <div class="ub" id="ub1"><input type="file" id="up1" accept="image/*">
+                    <!-- Single multi-select upload box -->
+                    <div class="ub" id="ub1" style="margin-bottom:8px">
+                        <input type="file" id="up1" accept="image/*" multiple>
                         <div class="ico">📷</div>
-                        <p>মেইন ফটো</p>
+                        <p id="upLabel">ছবি বেছে নিন (১টি বা ২টি)</p>
                     </div>
-                    <div class="ub" id="ub2"><input type="file" id="up2" accept="image/*">
-                        <div class="ico">🗃</div>
-                        <p>২য় ফটো</p>
-                    </div>
+                    <button id="btnRemoveBg" class="btn br" style="width:100%; margin-bottom:8px; font-size:14px; background:#43a047; display:none;">🪄 ম্যাজিক ব্যাকগ্রাউন্ড রিমুভ</button>
+                    <!-- Thumbnail preview strip -->
+                    <div id="imgPreviewStrip" style="display:none; gap:6px; margin-top:6px; flex-wrap:wrap"></div>
                 </div>
-            </div>
 
-            <div class="sec">
-                <h3>✏️ কন্টেন্ট</h3>
-                <div class="f"><label>শিরোনাম / উক্তি</label>
-                    <textarea id="headline">দেশের সর্বশেষ গুরুত্বপূর্ণ সংবাদ শিরোনাম এখানে লিখুন</textarea>
-                    <div class="img-scale-row" style="margin-top:4px; gap:12px">
-                        <div>
-                            <label style="font-size: .62rem; margin-bottom:0">ফন্ট সাইজ:</label>
-                            <input type="number" id="hlFs" value="48" style="width:60px; padding:4px"
-                                oninput="rf(); rth();">
+                <div class="sec">
+                    <h3>✏️ কন্টেন্ট</h3>
+                    <div class="f"><label>শিরোনাম / উক্তি</label>
+                        <textarea id="headline">দেশের সর্বশেষ গুরুত্বপূর্ণ সংবাদ শিরোনাম এখানে লিখুন</textarea>
+                        <div class="img-scale-row" style="margin-top:4px; gap:12px">
+                            <div>
+                                <label style="font-size: .62rem; margin-bottom:0">ফন্ট সাইজ:</label>
+                                <input type="number" id="hlFs" value="48" style="width:60px; padding:4px"
+                                    oninput="rf(); rth();">
+                            </div>
+                            <div style="flex:1">
+                                <label style="font-size: .62rem; margin-bottom:0">পজিশন (Y): <span id="hlYval"
+                                        style="color:#f87171">100</span></label>
+                                <input type="range" id="hlY" min="0" max="500" value="100"
+                                    oninput="$('hlYval').textContent=this.value; rf(); rth();">
+                            </div>
+                            <div style="flex:1">
+                                <label style="font-size: .62rem; margin-bottom:0">পজিশন (X): <span id="hlXval"
+                                        style="color:#f87171">52</span>%</label>
+                                <input type="range" id="hlX" min="0" max="90" value="52"
+                                    oninput="$('hlXval').textContent=this.value; rf(); rth();">
+                            </div>
                         </div>
-                        <div style="flex:1">
-                            <label style="font-size: .62rem; margin-bottom:0">পজিশন (Y):</label>
-                            <input type="range" id="hlY" min="0" max="300" value="100" oninput="rf(); rth();">
+                    </div>
+                    <div class="f"><label>বডি টেক্সট (ঐচ্ছিক)</label><textarea id="bodytext"
+                            style="min-height:56px"></textarea></div>
+                    <div class="f"><label>বক্তা / রিপোর্টার নাম</label><input type="text" id="speaker" value=""></div>
+                    <div class="f"><label>পদবি / বিভাগ</label><input type="text" id="designation" value=""></div>
+                    <div class="f"><label>ক্যাটাগরি</label>
+                        <select id="category">
+                            <option>🔴 ব্রেকিং নিউজ</option>
+                            <option>📌 জাতীয়</option>
+                            <option>🌐 আন্তর্জাতিক</option>
+                            <option>💼 অর্থনীতি</option>
+                            <option>🏆 খেলাধুলা</option>
+                            <option>🎭 বিনোদন</option>
+                            <option>🏥 স্বাস্থ্য</option>
+                            <option>⚖️ রাজনীতি</option>
+                            <option>📢 এক্সক্লুসিভ</option>
+                        </select>
+                    </div>
+                    <div class="f"><label>তারিখ</label><input type="text" id="catdate" value="২ মার্চ ২০২৬"></div>
+                    <div class="f"><label>ওয়েবসাইট</label><input type="text" id="website" value="">
+                    </div>
+                </div>
+
+                <div class="sec">
+                    <h3>🎨 অ্যাকসেন্ট রং</h3>
+                    <div class="cpr" id="colorPalette"></div>
+                </div>
+
+                <div class="sec">
+                    <h3>📢 বিজ্ঞাপন ফুটার</h3>
+                    <div class="ub" id="ubAd" style="margin-bottom:8px"><input type="file" id="upAd" accept="image/*">
+                        <div class="ico">🖼</div>
+                        <p>বিজ্ঞাপন ইমেজ আপলোড</p>
+                    </div>
+                    <div class="ad-row">
+                        <div class="tog on" id="adTog" onclick="toggleAd()"></div>
+                        <span class="ad-lbl" id="adLbl">বিজ্ঞাপন দেখানো হচ্ছে</span>
+                    </div>
+                </div>
+
+                <div class="sec">
+                    <h3>🔍 ছবির পজিশন ও জুম</h3>
+
+                    <div class="f">
+                        <select id="imgCtrlTarget" style="margin-bottom: 8px; font-weight: bold; color: #f87171"
+                            onchange="updateImgCtrlUI()">
+                            <option value="1">📷 মেইন ফটো</option>
+                            <option value="2">🗃 ২য় ফটো</option>
+                            <option value="3">🖼 বিজ্ঞাপন</option>
+                        </select>
+
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <div class="img-scale-row">
+                                <span style="font-size:.65rem; color:#64748b; min-width:44px">জুম</span>
+                                <input type="range" id="scU" min="50" max="300" value="100" step="1"
+                                    oninput="handleImgCtrlChange('scale', this.value)">
+                                <span class="img-scale-val" id="scUval">100%</span>
+                            </div>
+                            <div class="img-scale-row">
+                                <span style="font-size:.65rem; color:#64748b; min-width:44px">X অক্ষ</span>
+                                <input type="range" id="imUx" min="-800" max="800" value="0" step="5"
+                                    oninput="handleImgCtrlChange('x', this.value)">
+                                <span class="img-scale-val" id="imUxval">0px</span>
+                            </div>
+                            <div class="img-scale-row">
+                                <span style="font-size:.65rem; color:#64748b; min-width:44px">Y অক্ষ</span>
+                                <input type="range" id="imUy" min="-800" max="800" value="0" step="5"
+                                    oninput="handleImgCtrlChange('y', this.value)">
+                                <span class="img-scale-val" id="imUyval">0px</span>
+                            </div>
+                            <div class="f" style="margin-top:4px">
+                                <button class="btn br" id="btnFlipImg" onclick="flipSelectedImage()" style="width:100%; font-size:14px; background:#e67e22;">↔️ হরিজন্টাল ফ্লিপ (Horizontal Flip)</button>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="f"><label>বডি টেক্সট (ঐচ্ছিক)</label><textarea id="bodytext"
-                        style="min-height:56px"></textarea></div>
-                <div class="f"><label>বক্তা / রিপোর্টার নাম</label><input type="text" id="speaker" value=""></div>
-                <div class="f"><label>পদবি / বিভাগ</label><input type="text" id="designation" value=""></div>
-                <div class="f"><label>ক্যাটাগরি</label>
-                    <select id="category">
-                        <option>🔴 ব্রেকিং নিউজ</option>
-                        <option>📌 জাতীয়</option>
-                        <option>🌐 আন্তর্জাতিক</option>
-                        <option>💼 অর্থনীতি</option>
-                        <option>🏆 খেলাধুলা</option>
-                        <option>🎭 বিনোদন</option>
-                        <option>🏥 স্বাস্থ্য</option>
-                        <option>⚖️ রাজনীতি</option>
-                        <option>📢 এক্সক্লুসিভ</option>
-                    </select>
-                </div>
-                <div class="f"><label>তারিখ</label><input type="text" id="catdate" value="২ মার্চ ২০২৬"></div>
-                <div class="f"><label>ওয়েবসাইট</label><input type="text" id="website" value="">
-                </div>
-            </div>
-
-            <div class="sec">
-                <h3>🎨 অ্যাকসেন্ট রং</h3>
-                <div class="cpr" id="colorPalette"></div>
-            </div>
-
-            <div class="sec">
-                <h3>📢 বিজ্ঞাপন ফুটার</h3>
-                <div class="ub" id="ubAd" style="margin-bottom:8px"><input type="file" id="upAd" accept="image/*">
-                    <div class="ico">🖼</div>
-                    <p>বিজ্ঞাপন ইমেজ আপলোড</p>
-                </div>
-                <div class="ad-row">
-                    <div class="tog on" id="adTog" onclick="toggleAd()"></div>
-                    <span class="ad-lbl" id="adLbl">বিজ্ঞাপন দেখানো হচ্ছে</span>
-                </div>
-            </div>
-
-            <div class="sec">
-                <h3>🔍 ছবির সাইজ (জুম)</h3>
-                <div class="f">
-                    <label>মেইন ফটো স্কেল <span class="img-scale-val" id="sc1val">১০০%</span></label>
-                    <div class="img-scale-row">
-                        <input type="range" id="sc1" min="50" max="200" value="100" step="1"
-                            oninput="img1Scale=this.value/100; $('sc1val').textContent=this.value+'%'; rf(); rth();">
-                    </div>
-                </div>
-                <div class="f">
-                    <label>২য় ফটো স্কেল <span class="img-scale-val" id="sc2val">১০০%</span></label>
-                    <div class="img-scale-row">
-                        <input type="range" id="sc2" min="50" max="200" value="100" step="1"
-                            oninput="img2Scale=this.value/100; $('sc2val').textContent=this.value+'%'; rf(); rth();">
-                    </div>
-                </div>
-            </div>
 
                 <div class="actions">
                     <button class="btn br" onclick="rf()">🔄 রিফ্রেশ প্রিভিউ</button>
@@ -693,7 +730,7 @@
             const sb = document.getElementById('sidebar');
             const btn = document.getElementById('mobileEditBtn');
             sb.classList.toggle('show-inputs');
-            
+
             if (sb.classList.contains('show-inputs')) {
                 btn.innerHTML = '← টেমপ্লেট পরিবর্তন করুন';
             } else {
