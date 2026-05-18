@@ -690,7 +690,7 @@ function T7(ctx, d) {
   ctx.lineTo(0, fY - 40);            // tall — rises 40px above footer top
   ctx.lineTo(W * 0.40, mainH);       // wide — 40% of card width along bottom
   ctx.closePath();
-  ctx.fillStyle = '#c0392b';
+  ctx.fillStyle = '#5e5554ff';
   ctx.fill();
 
   /* 8. বিস্তারিত কমেন্টে — RIGHT side, top of footer, above logo */
@@ -728,8 +728,11 @@ function T7(ctx, d) {
   if (logoSrc && logoSrc.width) {
     const lH = 80;
     const lW = (logoSrc.width / logoSrc.height) * lH;
-    const lX = W - lW - 36;
-    const lY = fY + 78;              // pushed lower, below the button row
+
+    // শুধু এই লাইনটি পরিবর্তন করা হয়েছে
+    const lX = 20;
+
+    const lY = fY + 100;              // pushed lower, below the button row
     ctx.save();
     ctx.globalAlpha = 1;
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
