@@ -427,7 +427,7 @@ function T2(ctx, d) {
   /* Watermark (Jol Chap) — center between image and date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.35; // Bright watermark (valid range 0.0 to 1.0)
+    ctx.globalAlpha = 0.5; // Bright watermark (valid range 0.0 to 1.0)
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
@@ -515,7 +515,7 @@ function T2(ctx, d) {
     const lX = 20;
     const lY = fY + 100;              // pushed lower, below the button row
     ctx.save();
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = 1.0; // Fully bright
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
     ctx.restore();
   }
@@ -600,7 +600,7 @@ function T3(ctx, d) {
   /* Watermark (Jol Chap) — center between image and date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.35; // Bright watermark (valid range 0.0 to 1.0)
+    ctx.globalAlpha = 0.5; // Bright watermark (valid range 0.0 to 1.0)
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
