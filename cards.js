@@ -427,26 +427,11 @@ function T2(ctx, d) {
   /* Watermark (Jol Chap) — center between image and date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.85; // High visibility
-    ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 12;
+    ctx.globalAlpha = 0.35; // Bright watermark (valid range 0.0 to 1.0)
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
     const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
-
-    // Soft radial light glow behind the watermark to make black text clearly visible
-    const grad = ctx.createRadialGradient(
-      wmX + wmWidth / 2, wmY + wmHeight / 2, 10,
-      wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth / 1.3
-    );
-    grad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
@@ -530,7 +515,7 @@ function T2(ctx, d) {
     const lX = 20;
     const lY = fY + 100;              // pushed lower, below the button row
     ctx.save();
-    ctx.globalAlpha = 1.0; // Fully bright
+    ctx.globalAlpha = 0.5;
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
     ctx.restore();
   }
@@ -615,26 +600,11 @@ function T3(ctx, d) {
   /* Watermark (Jol Chap) — center between image and date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.85; // High visibility
-    ctx.shadowColor = '#ffffff';
-    ctx.shadowBlur = 12;
+    ctx.globalAlpha = 0.35; // Bright watermark (valid range 0.0 to 1.0)
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
     const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
-
-    // Soft radial light glow behind the watermark to make black text clearly visible
-    const grad = ctx.createRadialGradient(
-      wmX + wmWidth / 2, wmY + wmHeight / 2, 10,
-      wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth / 1.3
-    );
-    grad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
-    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.arc(wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
@@ -720,7 +690,7 @@ function T3(ctx, d) {
     const lX = triCX - lW / 2;
     const lY = triCY - lH / 2;
     ctx.save();
-    ctx.globalAlpha = 1.0; // Fully bright
+    ctx.globalAlpha = 1.0; // Fully bright (valid range 0.0 to 1.0)
     ctx.shadowBlur = 8;
     ctx.shadowColor = 'rgba(0,0,0,0.8)';
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
