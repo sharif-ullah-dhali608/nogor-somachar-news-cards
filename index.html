@@ -5,7 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
     <title>নগর সমাচার ২৪ – Card Maker</title>
-
+    <!-- Prevent Caching -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <!-- PWA Manifest -->
     <link rel="manifest" href="manifest.json">
 
@@ -713,7 +716,7 @@
                 </div>
 
                 <div class="actions">
-                    <button class="btn br" onclick="rf()">🔄 রিফ্রেশ প্রিভিউ</button>
+                    <button class="btn br" onclick="resetForm()">🔄 নতুন করে তৈরি করুন (Reset)</button>
                     <div class="brow">
                         <button class="btn br" onclick="dl('png')">⬇ PNG</button>
                         <button class="btn bd" onclick="dl('jpg')">⬇ JPG</button>

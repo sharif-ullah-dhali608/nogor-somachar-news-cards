@@ -434,6 +434,19 @@ function T2(ctx, d) {
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
     const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
+
+    // Soft radial light glow behind the watermark to make black text clearly visible
+    const grad = ctx.createRadialGradient(
+      wmX + wmWidth / 2, wmY + wmHeight / 2, 10,
+      wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth / 1.3
+    );
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
@@ -609,6 +622,19 @@ function T3(ctx, d) {
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
     const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
+
+    // Soft radial light glow behind the watermark to make black text clearly visible
+    const grad = ctx.createRadialGradient(
+      wmX + wmWidth / 2, wmY + wmHeight / 2, 10,
+      wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth / 1.3
+    );
+    grad.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+    grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(wmX + wmWidth / 2, wmY + wmHeight / 2, wmWidth, 0, Math.PI * 2);
+    ctx.fill();
+
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
