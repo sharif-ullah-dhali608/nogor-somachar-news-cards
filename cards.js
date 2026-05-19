@@ -143,7 +143,7 @@ let clockImg = null;
 })();
 
 
-function inp() { return { hl: $('headline').value || 'শিরোনাম', hlFs: parseInt($('hlFs').value) || 48, hlY: parseInt($('hlY').value) || 100, hlX: parseInt($('hlX').value) || 52, body: $('bodytext').value || '', sp: $('speaker').value || '', des: $('designation').value || '', cat: $('category').value, date: $('catdate').value || '', web: $('website').value || '', accent }; }
+function inp() { return { hl: $('headline').value || 'শিরোনাম', hlFs: parseInt($('hlFs').value) || 48, hlY: parseInt($('hlY').value) || 100, hlX: parseInt($('hlX').value) || 52, body: $('bodytext').value || '', sp: $('speaker').value || '', des: $('designation').value || '', cat: $('category').value, date: $('catdate').value || '', web: $('website').value || '', showDetailsBtn: $('showDetailsBtn') ? $('showDetailsBtn').checked : true, accent }; }
 
 /* ── core helpers ── */
 function cov(ctx, im, x, y, w, h, al = 1, scale = 1, offX = 0, offY = 0) {
@@ -694,34 +694,36 @@ function T7(ctx, d) {
   ctx.fill();
 
   /* 8. বিস্তারিত কমেন্টে — RIGHT side, top of footer, above logo */
-  const iconR = 20;
-  const btnRowY = fY + 44;           // top of footer + padding
-  // Measure text to right-align everything
-  ctx.font = '30px Noto Sans Bengali';
-  const btnLabel = 'বিস্তারিত কমেন্টে';
-  const labelW = ctx.measureText(btnLabel).width;
-  const iconGap = 14;
-  const totalBtnW = iconR * 2 + iconGap + labelW;
-  const btnRightEdge = W - 36;
-  const iconX = btnRightEdge - totalBtnW + iconR;
-  const iconCY = btnRowY;
-  // Red circle
-  ctx.beginPath();
-  ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
-  ctx.fillStyle = '#c0392b';
-  ctx.fill();
-  // White arrow
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 24px Arial';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('›', iconX, iconCY);
-  ctx.textBaseline = 'alphabetic';
-  ctx.textAlign = 'left';
-  // Label right-aligned
-  ctx.fillStyle = 'rgba(255,255,255,0.88)';
-  ctx.font = '30px Noto Sans Bengali';
-  ctx.fillText(btnLabel, iconX + iconR + iconGap, btnRowY + iconR - 2);
+  if (d.showDetailsBtn) {
+    const iconR = 20;
+    const btnRowY = fY + 44;           // top of footer + padding
+    // Measure text to right-align everything
+    ctx.font = '30px Noto Sans Bengali';
+    const btnLabel = 'বিস্তারিত কমেন্টে';
+    const labelW = ctx.measureText(btnLabel).width;
+    const iconGap = 14;
+    const totalBtnW = iconR * 2 + iconGap + labelW;
+    const btnRightEdge = W - 36;
+    const iconX = btnRightEdge - totalBtnW + iconR;
+    const iconCY = btnRowY;
+    // Red circle
+    ctx.beginPath();
+    ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
+    ctx.fillStyle = '#c0392b';
+    ctx.fill();
+    // White arrow
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('›', iconX, iconCY);
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    // Label right-aligned
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = '30px Noto Sans Bengali';
+    ctx.fillText(btnLabel, iconX + iconR + iconGap, btnRowY + iconR - 2);
+  }
 
   /* 9. Logo — right side, below বিস্তারিত কমেন্টে */
   const logoSrc = rawLogo || logo2 || logo;
@@ -752,9 +754,199 @@ function T7(ctx, d) {
 }
 
 
+
+/* ══════════════════════════════════════════════════════
+   T7b — T7 + বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ সহ
+══════════════════════════════════════════════════════ */
+function T7b(ctx, d) {
+  const ah = adH();
+  const mainH = H - ah;
+
+  /* 1. Pure black background */
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, W, mainH);
+
+  /* 2. Photo — top 57% */
+  const photoH = Math.round(mainH * 0.57);
+  if (img1) {
+    cov(ctx, img1, 0, 0, W, photoH, 1, img1Scale, img1OffX, img1OffY);
+    const fadeG = ctx.createLinearGradient(0, photoH - 90, 0, photoH + 10);
+    fadeG.addColorStop(0, 'rgba(0,0,0,0)');
+    fadeG.addColorStop(1, 'rgba(0,0,0,1)');
+    ctx.fillStyle = fadeG;
+    ctx.fillRect(0, photoH - 90, W, 100);
+  } else {
+    ctx.fillStyle = '#111111';
+    ctx.fillRect(0, 0, W, photoH);
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.font = 'bold 32px Noto Sans Bengali';
+    ctx.textAlign = 'center';
+    ctx.fillText('ছবি আপলোড করুন', W / 2, photoH / 2);
+    ctx.textAlign = 'left';
+  }
+
+  /* 2b. Clock badge — top-right corner, circular */
+  if (clockImg && clockImg.width) {
+    const badgeR = 60;
+    const badgeX = W - 24 - badgeR;
+    const badgeY = 24 + badgeR;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(badgeX - badgeR - 1, badgeY - badgeR - 1, badgeR * 2 + 2, badgeR * 2 + 2);
+    const imgAspect = clockImg.width / clockImg.height;
+    const fitH = badgeR * 2 * 1.05;
+    const fitW = fitH * imgAspect;
+    const logoXShift = fitW * 0.050;
+    ctx.drawImage(clockImg, badgeX - fitW / 2 - logoXShift, badgeY - fitH / 2, fitW, fitH);
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(badgeX, badgeY, badgeR + 1, 0, Math.PI * 2);
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  /* 3. Layout metrics */
+  const footerH = 240;
+  const fY = mainH - footerH;
+  const textAreaY = photoH;
+
+  /* 4. Date — right aligned, with thin full-width underline */
+  const dateY = textAreaY + 56;
+  if (d.date) {
+    ctx.fillStyle = 'rgba(255,255,255,0.78)';
+    ctx.font = '27px Noto Sans Bengali';
+    ctx.textAlign = 'right';
+    ctx.fillText(d.date, W - 44, dateY);
+    ctx.textAlign = 'left';
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.30)';
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.moveTo(44, dateY + 14);
+  ctx.lineTo(W - 44, dateY + 14);
+  ctx.stroke();
+
+  /* 5. Headline — right-aligned, bold, large */
+  const hlFontSize = d.hlFs || 60;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
+  nosh(ctx);
+  ctx.textAlign = 'right';
+  const hlY = dateY + 62;
+  const hlMaxW = W - 88;
+  const lh = hlFontSize * 1.42;
+  const hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
+  ctx.textAlign = 'left';
+
+  /* 6. Footer background */
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, fY, W, footerH);
+
+  /* 7. Red Triangle — BIG, bottom-left */
+  ctx.beginPath();
+  ctx.moveTo(0, mainH);
+  ctx.lineTo(0, fY - 40);
+  ctx.lineTo(W * 0.40, mainH);
+  ctx.closePath();
+  ctx.fillStyle = '#5e5554ff';
+  ctx.fill();
+
+  /* 8. বক্তা/রিপোর্টার নাম — footer LEFT side */
+  const spkX = W * 0.42;             // start after triangle area
+  const spkY = fY + 54;
+  if (d.sp) {
+    ctx.fillStyle = '#ffcc00';        // golden yellow name
+    ctx.font = 'bold 36px Noto Sans Bengali';
+    ctx.textAlign = 'left';
+    ctx.fillText(d.sp, spkX, spkY);
+  }
+
+  /* 8b. Divider line under name */
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(spkX, spkY + 14);
+  ctx.lineTo(W - 36, spkY + 14);
+  ctx.stroke();
+
+  /* 8c. পদবি/বিভাগ — below name */
+  if (d.des) {
+    ctx.fillStyle = 'rgba(200,200,200,0.85)';
+    ctx.font = '26px Noto Sans Bengali';
+    ctx.textAlign = 'left';
+    wrap(ctx, d.des, spkX, spkY + 52, W - spkX - 36, 36);
+  }
+
+  /* 8d. বিস্তারিত কমেন্টে — RIGHT side, top of footer */
+  if (d.showDetailsBtn) {
+    const iconR = 20;
+    const btnRowY = fY + 44;
+    ctx.font = '30px Noto Sans Bengali';
+    const btnLabel = 'বিস্তারিত কমেন্টে';
+    const labelW = ctx.measureText(btnLabel).width;
+    const iconGap = 14;
+    const totalBtnW = iconR * 2 + iconGap + labelW;
+    const btnRightEdge = W - 36;
+    const iconX = btnRightEdge - totalBtnW + iconR;
+    const iconCY = btnRowY;
+    
+    ctx.beginPath();
+    ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
+    ctx.fillStyle = '#c0392b';
+    ctx.fill();
+    
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('›', iconX, iconCY);
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    
+    ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = '30px Noto Sans Bengali';
+    ctx.fillText(btnLabel, iconX + iconR + iconGap, btnRowY + iconR - 2);
+  }
+
+  /* 9. Logo — triangle এর centroid-এ centered (logo.png ব্যবহার) */
+  const logoSrc = rawLogo || logo;
+  if (logoSrc && logoSrc.width) {
+    const triCX = (W * 0.40) / 3;
+    const triCY = (mainH + (fY - 40) + mainH) / 3;
+    const lH = 72;
+    const lW = (logoSrc.width / logoSrc.height) * lH;
+    const lX = triCX - lW / 2;
+    const lY = triCY - lH / 2;
+    ctx.save();
+    ctx.globalAlpha = 1;
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.drawImage(logoSrc, lX, lY, lW, lH);
+    ctx.restore();
+  }
+
+  /* 10. Website URL — bottom-right */
+  if (d.web) {
+    ctx.fillStyle = 'rgba(255,255,255,0.58)';
+    ctx.font = '22px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(d.web, W - 36, mainH - 18);
+    ctx.textAlign = 'left';
+  }
+
+  drawAd(ctx);
+}
+
 /* ── dispatch ── */
-const FNS = [T1, T2, T3, T7];
-const TNAMES = ['আর্টিকেল স্টাইল', 'ফুল ব্লিড রেড', 'ইশতিয়াক স্টাইল', 'আগামীর সময় স্টাইল (T7)'];
+const FNS = [T1, T2, T3, T7, T7b];
+const TNAMES = ['আর্টিকেল স্টাইল', 'ফুল ব্লিড রেড', 'ইশতিয়াক স্টাইল', 'আগামীর সময় (T7)', 'T7 + বক্তা/পদবি (T7b)'];
 
 function drawT(ctx, idx) { ctx.clearRect(0, 0, W, H); FNS[idx](ctx, inp()); }
 function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }
