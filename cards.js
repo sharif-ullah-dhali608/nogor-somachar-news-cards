@@ -1,4 +1,4 @@
-/* নগর সমাচার ২৪ — cards.js — 5 exact reference templates */
+/* নগর সমাচার ২৪ — cards.js — 3 exact reference templates */
 const W = 1080, H = 1080;
 const COLORS = ['#c0392b', '#e74c3c', '#b71c1c', '#e67e22', '#f39c12', '#43a047', '#1565c0', '#8e44ad', '#000', '#1a1a1a', '#fff'];
 let img1 = null, img2 = null, adImg = null, logo = null, accent = '#c0392b', curT = 0, showAd = true;
@@ -171,6 +171,19 @@ function wrapC(ctx, txt, cx, y, mw, lh) {/* center */
   for (const w of ws) { const t = ln ? ln + ' ' + w : w; if (ctx.measureText(t).width > mw && ln) { ls.push(ln); ln = w; } else ln = t; }
   ls.push(ln); ls.forEach((l, i) => ctx.fillText(l, cx, y + i * lh)); return ls.length;
 }
+function wrapR(ctx, txt, rx, y, mw, lh) {
+  /* right-aligned word wrap — rx is the right edge X */
+  if (!txt) return 0;
+  const ws = txt.split(' '); let ln = '', ls = [];
+  for (const w of ws) {
+    const t = ln ? ln + ' ' + w : w;
+    if (ctx.measureText(t).width > mw && ln) { ls.push(ln); ln = w; }
+    else ln = t;
+  }
+  ls.push(ln);
+  ls.forEach((l, i) => ctx.fillText(l, rx, y + i * lh));
+  return ls.length;
+}
 function pill(ctx, x, y, txt, fs = 20, px = 14, py = 8, bg = '#c0392b', fg = '#fff') {
   ctx.font = `bold ${fs}px Noto Sans Bengali`;
   const tw = ctx.measureText(txt).width, ph = fs + py * 2, pw = tw + px * 2, r = ph / 2;
@@ -204,6 +217,12 @@ function drawTextLogo(ctx, x, y, scale = 1, light = false) {
 function sh(ctx, b = 10) { ctx.shadowBlur = b; ctx.shadowColor = 'rgba(0,0,0,.8)'; }
 function nosh(ctx) { ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0; }
 
+function roundedRect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arc(x + w - r, y + r, r, -Math.PI / 2, 0);
+  ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + r); ctx.arc(x + r, y + r, r, Math.PI, 3 * Math.PI / 2);
+  ctx.closePath(); ctx.fill();
+}
+
 /* ── AD FOOTER ── */
 const AD_H = 120;
 function adH() { return showAd ? AD_H : 0; }
@@ -219,10 +238,7 @@ function drawAd(ctx) {
 }
 
 /* ══════════════════════════════════════════════════════
-   T2 — QUOTE SPLIT CARD (reference: left photo + right red quote panel)
-   LEFT: portrait photo full height + faint watermark
-   RIGHT: dark red bg, logo top, yellow ❝❝, white rounded quote box,
-          attribution (yellow em-dash + name), designation, website
+   T1 — QUOTE SPLIT CARD (reference: left photo + right red quote panel)
 ══════════════════════════════════════════════════════ */
 function T1(ctx, d) {
   const ah = adH();
@@ -233,7 +249,7 @@ function T1(ctx, d) {
   cov(ctx, img1, 0, 0, SPLIT, mainH, 1, img1Scale, img1OffX, img1OffY);
 
   /* ── RIGHT: dark red bg ── */
-  ctx.fillStyle = '#b71c1c'; // d.accent might not match the nice red in the reference perfectly. The image uses a rich dark red.
+  ctx.fillStyle = '#b71c1c';
   ctx.fillRect(SPLIT, 0, W - SPLIT, mainH);
 
   /* ── LOGO top right panel (direct red background) ── */
@@ -245,7 +261,6 @@ function T1(ctx, d) {
     ctx.save();
     ctx.shadowBlur = 4; ctx.shadowColor = 'rgba(0,0,0,0.5)';
     ctx.drawImage(logoSrc2, W - l2w - 24, 24, l2w, l2h);
-    // Draw twice for a stronger shadow definition behind white text on red
     ctx.drawImage(logoSrc2, W - l2w - 24, 24, l2w, l2h);
     ctx.restore();
   }
@@ -256,10 +271,8 @@ function T1(ctx, d) {
   const qfs = 36, qlh = qfs * 1.5;
   ctx.font = `bold ${qfs}px Noto Serif Bengali`;
 
-  // Custom exact line counting for accurate box height
   const pWords = d.hl.split(' ');
   let tLines = 1, trm = '';
-  // Accurate wrapping length calculation
   const ws = d.hl.split(' ');
   let ln = '', ls = [];
   for (const w of ws) {
@@ -269,7 +282,6 @@ function T1(ctx, d) {
   }
   ls.push(ln);
 
-  // Increased base padding significantly to make the box even bigger vertically
   const boxH = Math.max(460, ls.length * qlh + 160);
   const boxY = 180;
 
@@ -290,7 +302,6 @@ function T1(ctx, d) {
   ctx.fillStyle = '#ffcc00'; // bright yellow
   ctx.font = 'bold 180px Georgia, serif';
   ctx.textBaseline = 'top';
-  // Use a single quotation character which produces exactly two strokes (two commas)
   ctx.fillText('\u201c', boxX + 80, boxY - 60);
   ctx.textBaseline = 'alphabetic'; // reset
 
@@ -308,17 +319,16 @@ function T1(ctx, d) {
   const spkText = '—  ' + (d.sp || 'বক্তার নাম');
   ctx.fillText(spkText, attrX, attrY);
 
-  // designation / body text in white, 2 lines
   let nextY = attrY + 45;
   const desTxt = d.des || d.body;
   if (desTxt) {
     ctx.fillStyle = '#fff'; // designation white
     ctx.font = `24px Noto Sans Bengali`;
-    const dashW = ctx.measureText('—  ').width; // align exactly under name
+    const dashW = ctx.measureText('—  ').width;
     wrap(ctx, desTxt, attrX + dashW, nextY, W - attrX - dashW - 40, 36);
   }
 
-  /* watermark: center 50/50 over split and over the quote box */
+  /* watermark */
   ctx.save();
   const wmY = Math.round(mainH * 0.50);
   const wmFs = 42;
@@ -328,7 +338,6 @@ function T1(ctx, d) {
   const tw2 = ctx.measureText(wPart2).width;
   const tw3 = ctx.measureText(wPart3).width;
   const totalW = tw1 + tw2 + tw3;
-  // Center exactly 50/50 over the SPLIT line
   const wmX = SPLIT - Math.round(totalW / 2);
   ctx.globalAlpha = 0.25;
   ctx.fillStyle = '#ffffff'; ctx.fillText(wPart1, wmX, wmY);
@@ -342,9 +351,7 @@ function T1(ctx, d) {
     ctx.font = 'bold 24px Arial, Noto Sans Bengali';
     const webX = SPLIT + (W - SPLIT) / 2;
     ctx.textAlign = 'center';
-
-    // Globe icon approximation with text
-    ctx.fillText('�  ' + d.web, webX, mainH - 45);
+    ctx.fillText('  ' + d.web, webX, mainH - 45);
     ctx.textAlign = 'left';
   }
 
@@ -352,241 +359,9 @@ function T1(ctx, d) {
 }
 
 /* ══════════════════════════════════════════════════════
-   T4 — BANGLADESH TIMES STYLE (Reference Image)
-   Left curved photo, Red-Dark gradient bg, White text, Pill button
+   T2 — AGAMIR SOMOY STYLE (previously T7)
 ══════════════════════════════════════════════════════ */
 function T2(ctx, d) {
-  const ah = adH();
-  const mainH = H - ah;
-
-  // 1. Background (Deep Red Gradient)
-  const g = ctx.createLinearGradient(W, 0, W, mainH);
-  g.addColorStop(0, '#a50000'); // Deep Red
-  g.addColorStop(1, '#5a0000'); // Darker Red
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, W, mainH);
-
-  // 2. Photo with Custom Curved Clip (Left Side)
-  ctx.save();
-  ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(W * 0.45, 0); // Top width
-  // Creating the elegant curve like the reference
-  ctx.bezierCurveTo(W * 0.65, mainH * 0.3, W * 0.35, mainH * 0.7, W * 0.55, mainH);
-  ctx.lineTo(0, mainH);
-  ctx.closePath();
-  ctx.clip();
-
-  if (img1) {
-    cov(ctx, img1, 0, 0, W * 0.65, mainH, 1, img1Scale, img1OffX, img1OffY);
-  } else {
-    ctx.fillStyle = '#333'; ctx.fillRect(0, 0, W * 0.65, mainH);
-  }
-  ctx.restore();
-
-  // 3. Logo and Date (Top Right)
-  const logoX = W - 50;
-  if (logo2 || logo) {
-    const lImg = logo2 || logo;
-    const lH = 65;
-    const lW = (lImg.width / lImg.height) * lH;
-    ctx.drawImage(lImg, logoX - lW, 40, lW, lH);
-  }
-
-  if (d.date) {
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 28px Noto Sans Bengali';
-    ctx.textAlign = 'right';
-    ctx.fillText(d.date, logoX, 140);
-  }
-
-  // 4. Headline (Main Quote)
-  const textX = W * ((d.hlX || 52) / 100); // X position from slider
-  const textW = W - textX - 50;
-  const textStartY = (d.hlY || 100) + 120;  // Y position from slider (base 120 + offset)
-  ctx.textAlign = 'left';
-  ctx.fillStyle = '#fff';
-  ctx.font = `bold ${d.hlFs || 58}px Noto Serif Bengali`;
-  const hLines = wrap(ctx, d.hl, textX, textStartY, textW, 85);
-
-  // 5. Speaker Name (Yellow with Underline)
-  const speakerY = textStartY + (hLines * 85) + 60;
-  ctx.fillStyle = '#ffff00'; // Bright Yellow
-  ctx.font = 'bold 42px Noto Sans Bengali';
-  ctx.textAlign = 'right';
-  ctx.fillText(d.sp || 'নাম উল্লেখ নেই', W - 50, speakerY);
-
-  // Underline
-  ctx.strokeStyle = '#ffff00';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(W - 50, speakerY + 15);
-  ctx.lineTo(W - 400, speakerY + 15);
-  ctx.stroke();
-
-  // 6. Pill Button removed as requested
-  // 7. Footer Ad Area
-  drawAd(ctx);
-}
-
-/* ══════════════════════════════════════════════════════
-   T3 — PERFECT GEOMETRIC SLANT (Ref: Image 2)
-   Fixed intercepts to match the massive Dark Red band and layout
-══════════════════════════════════════════════════════ */
-/* ══════════════════════════════════════════════════════
-   T3 — PERFECT GEOMETRIC SLANT (Ref: Image 3/4)
-   Fixed intercepts to match the massive Dark Red band and layout
-══════════════════════════════════════════════════════ */
-function T3(ctx, d) {
-  const ah = adH();
-  const mainH = H - ah;
-
-  const fillAbove = (color, c) => {
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    if (c >= 0) {
-      ctx.moveTo(0, c);
-      ctx.lineTo(W, W + c);
-      ctx.lineTo(W, 0);
-      ctx.lineTo(0, 0);
-    } else {
-      ctx.moveTo(-c, 0);
-      ctx.lineTo(W, W + c);
-      ctx.lineTo(W, 0);
-    }
-    ctx.fill();
-  };
-
-  // Base Beige
-  ctx.fillStyle = '#E5E3DB';
-  ctx.fillRect(0, 0, W, mainH);
-
-  // Layers from bottom-up
-  fillAbove('#5A473E', 800);  // Shadow Brown
-  fillAbove('#48494B', 650);  // Dark Grey
-  fillAbove('#811D1E', 450);  // Dark Red (massive central coverage)
-  fillAbove('#68483B', -500); // Main Brown (Top Right corner)
-
-  // Bright Red overlay (Bottom Right)
-  ctx.fillStyle = '#D61214';
-  ctx.beginPath();
-  ctx.moveTo(W, mainH - 350);
-  ctx.lineTo(W - 450, mainH);
-  ctx.lineTo(W, mainH);
-  ctx.fill();
-
-  // Faint watermark
-  ctx.save();
-  ctx.globalAlpha = 0.05;
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 90px Arial';
-  ctx.textAlign = 'center';
-  ctx.fillText('Nogor Somachar 24', W / 2 + 50, mainH - 220);
-  ctx.restore();
-
-  // Quote marks
-  ctx.fillStyle = '#0F0F0F';
-  ctx.font = 'bold 240px Arial, serif';
-  ctx.textBaseline = 'top';
-  nosh(ctx);
-  ctx.fillText('“', 100, 60);
-  ctx.textBaseline = 'alphabetic';
-
-  // True Logo explicitly un-filtered
-  const logoX = W - 50;
-  if (rawLogo && rawLogo.width) {
-    const lH = 80;
-    const lW = (rawLogo.width / rawLogo.height) * lH;
-    ctx.drawImage(rawLogo, logoX - lW, 50, lW, lH);
-  }
-
-  // Centered Quote Text
-  const textX = W / 2;
-  const textW = W - 180;
-  // Make sure it starts lower, avoiding logo collision even if hlY=100
-  const textStartY = d.hlY + 80;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#fff';
-  ctx.font = `normal ${d.hlFs || 46}px Noto Sans Bengali, sans-serif`;
-  nosh(ctx);
-  const hLines = wrapC(ctx, d.hl, textX, textStartY, textW, (d.hlFs || 46) * 1.6);
-
-  // Speaker Name
-  ctx.textAlign = 'left';
-  const speakerY = textStartY + (hLines * (d.hlFs || 46) * 1.6) + 70;
-
-  ctx.fillStyle = '#ECA93A'; // Golden Yellow
-  ctx.font = 'bold 46px Noto Sans Bengali, Arial';
-  ctx.fillText(d.sp || 'ইশতিয়াক আহমেদ সিদ্দিকী', 100, speakerY);
-
-  // Divider
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.moveTo(100, speakerY + 28);
-  ctx.lineTo(480, speakerY + 28);
-  ctx.stroke();
-
-  // Designation
-  ctx.fillStyle = '#E8E8E8';
-  ctx.font = 'normal 26px Noto Sans Bengali';
-  ctx.fillText(d.des || 'প্রথম যুগ্ম-সম্পাদক, সিলেট জেলা বিএনপি।', 100, speakerY + 75);
-
-  // Date
-  if (d.date) {
-    ctx.fillStyle = '#000000';
-    ctx.font = 'bold 44px Noto Sans Bengali';
-    ctx.fillText(d.date, 80, mainH - 80);
-  }
-
-  // Person Image
-  if (img1) {
-    ctx.save();
-    const ih = mainH * 0.58 * img1Scale;
-    const iw = (img1.width / img1.height) * ih;
-    const drawX = W - iw + img1OffX;
-    const drawY = mainH - ih + img1OffY;
-    ctx.drawImage(img1, drawX, drawY, iw, ih);
-    ctx.restore();
-  }
-
-  // Footer Ad Area
-  drawAd(ctx);
-}
-
-
-function roundedRect(ctx, x, y, w, h, r) {
-  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arc(x + w - r, y + r, r, -Math.PI / 2, 0);
-  ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + r); ctx.arc(x + r, y + r, r, Math.PI, 3 * Math.PI / 2);
-  ctx.closePath(); ctx.fill();
-}
-
-
-/* ══════════════════════════════════════════════════════
-   T7 — AGAMIR SOMOY STYLE (exact reference match)
-   - Black bg
-   - Photo top ~57%
-   - Date right-aligned + thin underline
-   - Headline right-aligned, large bold
-   - বিস্তারিত কমেন্টে LEFT side
-   - Big red triangle bottom-left
-   - Logo + website bottom-right
-══════════════════════════════════════════════════════ */
-function wrapR(ctx, txt, rx, y, mw, lh) {
-  /* right-aligned word wrap — rx is the right edge X */
-  if (!txt) return 0;
-  const ws = txt.split(' '); let ln = '', ls = [];
-  for (const w of ws) {
-    const t = ln ? ln + ' ' + w : w;
-    if (ctx.measureText(t).width > mw && ln) { ls.push(ln); ln = w; }
-    else ln = t;
-  }
-  ls.push(ln);
-  ls.forEach((l, i) => ctx.fillText(l, rx, y + i * lh));
-  return ls.length;
-}
-
-function T7(ctx, d) {
   const ah = adH();
   const mainH = H - ah;
 
@@ -620,23 +395,18 @@ function T7(ctx, d) {
     const badgeX = W - 24 - badgeR; // top-RIGHT side
     const badgeY = 24 + badgeR;
     ctx.save();
-    // 1. Clip to circle
     ctx.beginPath();
     ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
-    // 2. White background fill
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(badgeX - badgeR - 1, badgeY - badgeR - 1, badgeR * 2 + 2, badgeR * 2 + 2);
-    // 3. Scale by HEIGHT (image is landscape) so full logo shows
     const imgAspect = clockImg.width / clockImg.height;
     const fitH = badgeR * 2 * 1.05;
     const fitW = fitH * imgAspect;
-    // Logo is right-of-center in the source image, shift LEFT to center it
     const logoXShift = fitW * 0.050;
     ctx.drawImage(clockImg, badgeX - fitW / 2 - logoXShift, badgeY - fitH / 2, fitW, fitH);
     ctx.restore();
-    // 4. White border ring
     ctx.save();
     ctx.beginPath();
     ctx.arc(badgeX, badgeY, badgeR + 1, 0, Math.PI * 2);
@@ -653,6 +423,18 @@ function T7(ctx, d) {
 
   /* 4. Date — right aligned, with thin full-width underline */
   const dateY = textAreaY + 56;
+
+  /* Watermark (Jol Chap) — center between image and date */
+  if (logo2 && logo2.width) {
+    ctx.save();
+    ctx.globalAlpha = 0.15; // faint watermark
+    const wmWidth = 320;
+    const wmHeight = (logo2.height / logo2.width) * wmWidth;
+    const wmX = (W - wmWidth) / 2;
+    const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
+    ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
+    ctx.restore();
+  }
   if (d.date) {
     ctx.fillStyle = 'rgba(255,255,255,0.78)';
     ctx.font = '27px Noto Sans Bengali';
@@ -730,10 +512,7 @@ function T7(ctx, d) {
   if (logoSrc && logoSrc.width) {
     const lH = 80;
     const lW = (logoSrc.width / logoSrc.height) * lH;
-
-    // শুধু এই লাইনটি পরিবর্তন করা হয়েছে
     const lX = 20;
-
     const lY = fY + 100;              // pushed lower, below the button row
     ctx.save();
     ctx.globalAlpha = 1;
@@ -753,12 +532,10 @@ function T7(ctx, d) {
   drawAd(ctx);
 }
 
-
-
 /* ══════════════════════════════════════════════════════
-   T7b — T7 + বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ সহ
+   T3 — T2 + বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ সহ (previously T7b)
 ══════════════════════════════════════════════════════ */
-function T7b(ctx, d) {
+function T3(ctx, d) {
   const ah = adH();
   const mainH = H - ah;
 
@@ -819,6 +596,18 @@ function T7b(ctx, d) {
 
   /* 4. Date — right aligned, with thin full-width underline */
   const dateY = textAreaY + 56;
+
+  /* Watermark (Jol Chap) — center between image and date */
+  if (logo2 && logo2.width) {
+    ctx.save();
+    ctx.globalAlpha = 0.15; // faint watermark
+    const wmWidth = 320;
+    const wmHeight = (logo2.height / logo2.width) * wmWidth;
+    const wmX = (W - wmWidth) / 2;
+    const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
+    ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
+    ctx.restore();
+  }
   if (d.date) {
     ctx.fillStyle = 'rgba(255,255,255,0.78)';
     ctx.font = '27px Noto Sans Bengali';
@@ -896,12 +685,12 @@ function T7b(ctx, d) {
     const btnRightEdge = W - 36;
     const iconX = btnRightEdge - totalBtnW + iconR;
     const iconCY = btnRowY;
-    
+
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
     ctx.fillStyle = '#c0392b';
     ctx.fill();
-    
+
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
@@ -909,7 +698,7 @@ function T7b(ctx, d) {
     ctx.fillText('›', iconX, iconCY);
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
-    
+
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
     ctx.font = '30px Noto Sans Bengali';
     ctx.fillText(btnLabel, iconX + iconR + iconGap, btnRowY + iconR - 2);
@@ -945,8 +734,8 @@ function T7b(ctx, d) {
 }
 
 /* ── dispatch ── */
-const FNS = [T1, T2, T3, T7, T7b];
-const TNAMES = ['আর্টিকেল স্টাইল', 'ফুল ব্লিড রেড', 'ইশতিয়াক স্টাইল', 'আগামীর সময় (T7)', 'T7 + বক্তা/পদবি (T7b)'];
+const FNS = [T1, T2, T3];
+const TNAMES = ['আর্টিকেল স্টাইল', 'আগামীর সময় স্টাইল', 'আগামীর সময় + বক্তা/পদবি'];
 
 function drawT(ctx, idx) { ctx.clearRect(0, 0, W, H); FNS[idx](ctx, inp()); }
 function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }
