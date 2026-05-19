@@ -427,7 +427,9 @@ function T2(ctx, d) {
   /* Watermark (Jol Chap) — center between image and date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.15; // faint watermark
+    ctx.globalAlpha = 0.85; // High visibility
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 12;
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
@@ -515,7 +517,7 @@ function T2(ctx, d) {
     const lX = 20;
     const lY = fY + 100;              // pushed lower, below the button row
     ctx.save();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0; // Fully bright
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
     ctx.restore();
   }
@@ -600,7 +602,9 @@ function T3(ctx, d) {
   /* Watermark (Jol Chap) — center between image and date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.15; // faint watermark
+    ctx.globalAlpha = 0.85; // High visibility
+    ctx.shadowColor = '#ffffff';
+    ctx.shadowBlur = 12;
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
@@ -690,7 +694,7 @@ function T3(ctx, d) {
     const lX = triCX - lW / 2;
     const lY = triCY - lH / 2;
     ctx.save();
-    ctx.globalAlpha = 1;
+    ctx.globalAlpha = 1.0; // Fully bright
     ctx.shadowBlur = 8;
     ctx.shadowColor = 'rgba(0,0,0,0.8)';
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
@@ -903,20 +907,20 @@ function getBengaliDate() {
   const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
   const bngNums = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
   const toBng = (str) => str.toString().split('').map(c => /[0-9]/.test(c) ? bngNums[c] : c).join('');
-  
+
   const d = new Date();
   return `${toBng(d.getDate())} ${months[d.getMonth()]} ${toBng(d.getFullYear())}`;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const inputs = document.querySelectorAll('input, textarea');
-  
+
   // Set default date
   const dateInput = $('catdate');
   if (dateInput && !dateInput.value.trim() || dateInput.value === '২ মার্চ ২০২৬') {
     dateInput.value = getBengaliDate();
   }
-  
+
   // Load saved data
   const savedData = localStorage.getItem('newsCardData');
   if (savedData) {
@@ -945,7 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Save data on input and auto-select on focus
   inputs.forEach(input => {
     // Auto-select text on focus
-    input.addEventListener('focus', function() {
+    input.addEventListener('focus', function () {
       this.select();
     });
 
