@@ -699,12 +699,12 @@ function T3(ctx, d) {
 
   /* 10. বিস্তারিত কমেন্টে — Centered at bottom */
   if (d.showDetailsBtn) {
-    const iconR = 18;
+    const iconR = 15;
     const iconCY = mainH - 24;
-    ctx.font = '26px Noto Sans Bengali';
+    ctx.font = '22px Noto Sans Bengali';
     const btnLabel = 'বিস্তারিত কমেন্টে';
     const labelW = ctx.measureText(btnLabel).width;
-    const iconGap = 12;
+    const iconGap = 10;
     const totalW = (iconR * 2) + iconGap + labelW;
     const startX = (W - totalW) / 2;
     const iconX = startX + iconR;
@@ -715,7 +715,7 @@ function T3(ctx, d) {
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('›', iconX, iconCY);
@@ -890,3 +890,79 @@ function dl(fmt = 'png') {
 }
 
 buildColors(); rth(); updateImgCtrlUI(); rf();
+
+function resetForm() {
+  if (confirm('আপনি কি সব ডাটা মুছে নতুন করে শুরু করতে চান?')) {
+    localStorage.removeItem('newsCardData');
+    location.reload();
+  }
+}
+
+/* ── Auto-save & Auto-select Logic ── */
+function getBengaliDate() {
+  const months = ['জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন', 'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর'];
+  const bngNums = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+  const toBng = (str) => str.toString().split('').map(c => /[0-9]/.test(c) ? bngNums[c] : c).join('');
+  
+  const d = new Date();
+  return `${toBng(d.getDate())} ${months[d.getMonth()]} ${toBng(d.getFullYear())}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const inputs = document.querySelectorAll('input, textarea');
+  
+  // Set default date
+  const dateInput = $('catdate');
+  if (dateInput && !dateInput.value.trim() || dateInput.value === '২ মার্চ ২০২৬') {
+    dateInput.value = getBengaliDate();
+  }
+  
+  // Load saved data
+  const savedData = localStorage.getItem('newsCardData');
+  if (savedData) {
+    try {
+      const data = JSON.parse(savedData);
+      inputs.forEach(input => {
+        if (input.type === 'file') return;
+        if (input.id && data[input.id] !== undefined) {
+          if (input.type === 'checkbox' || input.type === 'radio') {
+            input.checked = data[input.id];
+          } else {
+            input.value = data[input.id];
+          }
+        }
+      });
+      // Delay rendering slightly to ensure fonts/images are ready
+      setTimeout(() => {
+        if (typeof rf === 'function') rf();
+        if (typeof rth === 'function') rth();
+      }, 100);
+    } catch (e) {
+      console.error("Failed to parse saved data");
+    }
+  }
+
+  // Save data on input and auto-select on focus
+  inputs.forEach(input => {
+    // Auto-select text on focus
+    input.addEventListener('focus', function() {
+      this.select();
+    });
+
+    // Auto-save on change
+    input.addEventListener('input', () => {
+      const currentData = {};
+      inputs.forEach(inp => {
+        if (inp.type === 'file') return;
+        if (inp.id) {
+          if (inp.type === 'checkbox' || inp.type === 'radio') {
+            currentData[inp.id] = inp.checked;
+          } else {
+            currentData[inp.id] = inp.value;
+          }
+        }
+      });
+      localStorage.setItem('newsCardData', JSON.stringify(currentData));
+    });
+  });
+});
