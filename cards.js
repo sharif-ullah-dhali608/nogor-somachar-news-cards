@@ -421,6 +421,19 @@ function T2(ctx, d) {
   const fY = mainH - footerH;
   const textAreaY = photoH;
 
+  /* 3b. Footer background */
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, fY, W, footerH);
+
+  /* 3c. Red Triangle — BIG, bottom-left, rises above footer */
+  ctx.beginPath();
+  ctx.moveTo(0, mainH);              // bottom-left corner
+  ctx.lineTo(0, fY - 40);            // tall — rises 40px above footer top
+  ctx.lineTo(W * 0.40, mainH);       // wide — 40% of card width along bottom
+  ctx.closePath();
+  ctx.fillStyle = '#5e5554ff';
+  ctx.fill();
+
   /* 4. Date — right aligned, with thin full-width underline */
   const dateY = textAreaY + 56;
 
@@ -450,35 +463,29 @@ function T2(ctx, d) {
   ctx.lineTo(W - 44, dateY + 14);
   ctx.stroke();
 
-  /* 5. Headline — right-aligned, bold, large */
+  /* 5. Headline */
   const hlFontSize = d.hlFs || 60;
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
   nosh(ctx);
-  ctx.textAlign = 'right';
-  const hlY = dateY + 62;
-  const hlMaxW = W - 88;
+  const hlMaxW = W - 120; // Reduced to prevent cutoff
   const lh = hlFontSize * 1.42;
-  const hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
+  let hlLines;
+  if (d.showDetailsBtn) {
+    ctx.textAlign = 'right';
+    const hlY = dateY + 62;
+    hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
+  } else {
+    ctx.textAlign = 'center';
+    const hlY = dateY + 90; // Move down slightly when centered
+    hlLines = wrapC(ctx, d.hl, W / 2, hlY, hlMaxW, lh);
+  }
   ctx.textAlign = 'left';
-
-  /* 6. Footer background */
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(0, fY, W, footerH);
-
-  /* 7. Red Triangle — BIG, bottom-left, rises above footer */
-  ctx.beginPath();
-  ctx.moveTo(0, mainH);              // bottom-left corner
-  ctx.lineTo(0, fY - 40);            // tall — rises 40px above footer top
-  ctx.lineTo(W * 0.40, mainH);       // wide — 40% of card width along bottom
-  ctx.closePath();
-  ctx.fillStyle = '#5e5554ff';
-  ctx.fill();
 
   /* 8. বিস্তারিত কমেন্টে — RIGHT side, top of footer, above logo */
   if (d.showDetailsBtn) {
     const iconR = 20;
-    const btnRowY = fY + 44;           // top of footer + padding
+    const btnRowY = fY + 134;           // moved down 50px to sit above website
     // Measure text to right-align everything
     ctx.font = '30px Noto Sans Bengali';
     const btnLabel = 'বিস্তারিত কমেন্টে';
@@ -594,6 +601,19 @@ function T3(ctx, d) {
   const fY = mainH - footerH;
   const textAreaY = photoH;
 
+  /* 3b. Footer background */
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, fY, W, footerH);
+
+  /* 3c. Red Triangle — BIG, bottom-left */
+  ctx.beginPath();
+  ctx.moveTo(0, mainH);
+  ctx.lineTo(0, fY - 40);
+  ctx.lineTo(W * 0.40, mainH);
+  ctx.closePath();
+  ctx.fillStyle = '#5e5554ff';
+  ctx.fill();
+
   /* 4. Date — right aligned, with thin full-width underline */
   const dateY = textAreaY + 56;
 
@@ -625,33 +645,27 @@ function T3(ctx, d) {
   ctx.lineTo(W - 44, dateY + 14);
   ctx.stroke();
 
-  /* 5. Headline — right-aligned, bold, large */
+  /* 5. Headline */
   const hlFontSize = d.hlFs || 60;
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
   nosh(ctx);
-  ctx.textAlign = 'right';
-  const hlY = dateY + 62;
-  const hlMaxW = W - 88;
+  const hlMaxW = W - 120; // Reduced to prevent cutoff
   const lh = hlFontSize * 1.42;
-  const hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
+  let hlLines;
+  if (d.showDetailsBtn) {
+    ctx.textAlign = 'right';
+    const hlY = dateY + 62;
+    hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
+  } else {
+    ctx.textAlign = 'center';
+    const hlY = dateY + 90; // Move down slightly when centered
+    hlLines = wrapC(ctx, d.hl, W / 2, hlY, hlMaxW, lh);
+  }
   ctx.textAlign = 'left';
 
-  /* 6. Footer background */
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(0, fY, W, footerH);
-
-  /* 7. Red Triangle — BIG, bottom-left */
-  ctx.beginPath();
-  ctx.moveTo(0, mainH);
-  ctx.lineTo(0, fY - 40);
-  ctx.lineTo(W * 0.40, mainH);
-  ctx.closePath();
-  ctx.fillStyle = '#5e5554ff';
-  ctx.fill();
-
   /* 8. বক্তা/রিপোর্টার নাম — footer RIGHT side */
-  const spkY = fY + 54;
+  const spkY = fY + 114; // moved down by 60px
   const spkRightEdge = W - 36;
   if (d.sp) {
     ctx.fillStyle = '#ffcc00';        // golden yellow name
