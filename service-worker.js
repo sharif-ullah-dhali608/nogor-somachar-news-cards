@@ -1,5 +1,5 @@
 // নগর সমাচার ২৪ — Card Maker Service Worker
-const CACHE_NAME = 'nogor-card-maker-v1';
+const CACHE_NAME = 'nogor-card-maker-v2';
 
 // অফলাইনে যা যা লাগবে সেগুলো cache করে রাখবো
 const ASSETS_TO_CACHE = [
@@ -42,38 +42,33 @@ self.addEventListener('activate', event => {
   self.clients.claim(); // সাথে সাথে সব tab এ control নেবে
 });
 
-// ── Fetch: নেট না থাকলে cache থেকে দেবে ──
+// ── Fetch: নেটওয়ার্ক থেকে আগে চেক করবে (Network First Strategy) ──
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(cachedResponse => {
-      if (cachedResponse) {
-        // Cache হিট — সাথে সাথে দাও
-        return cachedResponse;
-      }
-
-      // Cache এ নেই — নেট থেকে আনো এবং cache এ সেভ করো
-      return fetch(event.request)
-        .then(networkResponse => {
-          // শুধু valid response cache করবো
-          if (
-            !networkResponse ||
-            networkResponse.status !== 200 ||
-            networkResponse.type === 'opaque'
-          ) {
-            return networkResponse;
-          }
-
+    fetch(event.request)
+      .then(networkResponse => {
+        // নেটওয়ার্ক ঠিক থাকলে response cache-এ সেভ করো এবং রিটার্ন করো
+        if (
+          networkResponse &&
+          networkResponse.status === 200 &&
+          networkResponse.type !== 'opaque'
+        ) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, responseToCache);
           });
-
-          return networkResponse;
-        })
-        .catch(() => {
-          // নেট নেই, cache এও নেই — fallback index.html দাও
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // নেট না থাকলে (অফলাইন) cache থেকে দাও
+        return caches.match(event.request).then(cachedResponse => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // Cache-এও না থাকলে fallback index.html দাও
           return caches.match('./index.html');
         });
-    })
+      })
   );
 });
