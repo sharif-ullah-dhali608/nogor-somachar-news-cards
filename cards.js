@@ -1,7 +1,7 @@
 /* নগর সমাচার ২৪ — cards.js — 3 exact reference templates */
 const W = 1080, H = 1080;
 const COLORS = ['#c0392b', '#e74c3c', '#b71c1c', '#e67e22', '#f39c12', '#43a047', '#1565c0', '#8e44ad', '#000', '#1a1a1a', '#fff'];
-let img1 = null, img2 = null, adImg = null, logo = null, accent = '#c0392b', curT = 0, showAd = true;
+let img1 = null, img2 = null, adImg = null, logo = null, accent = '#c0392b', curT = 0, showAd = false;
 let img1Scale = 1.0, img2Scale = 1.0;
 let img1OffX = 0, img1OffY = 0, img2OffX = 0, img2OffY = 0;
 let adImgScale = 1.0, adImgOffX = 0, adImgOffY = 0;
@@ -436,31 +436,36 @@ function T2(ctx, d) {
 
   /* 4. Date — right aligned, with thin full-width underline */
   const dateY = textAreaY + 56;
+  const alignDateY = dateY - 70; // তারিখের পজিশনটি আগে হিসাব করে নিলাম
 
-  /* Watermark (Jol Chap) — center between image and date */
+  /* Watermark (Jol Chap) — center aligned with date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.5; // Bright watermark (valid range 0.0 to 1.0)
+    ctx.globalAlpha = 1.0; // লোগোটি উজ্জ্বল দেখানোর জন্য 1.0 করা হলো (হালকা চাইলে 0.5 রাখতে পারেন)
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
-    const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
+    
+    // লোগোটিকে তারিখের ঠিক সোজা লাইনে বসানো হলো:
+    const wmY = alignDateY - (wmHeight / 2) - 10; 
+    
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
+
   if (d.date) {
     ctx.fillStyle = 'rgba(255,255,255,0.78)';
     ctx.font = '27px Noto Sans Bengali';
     ctx.textAlign = 'right';
-    ctx.fillText(d.date, W - 44, dateY);
+    ctx.fillText(d.date, W - 44, alignDateY);
     ctx.textAlign = 'left';
   }
   // Thin separator line below date
   ctx.strokeStyle = 'rgba(255,255,255,0.30)';
   ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(44, dateY + 14);
-  ctx.lineTo(W - 44, dateY + 14);
+  ctx.moveTo(44, alignDateY + 14);
+  ctx.lineTo(W - 44, alignDateY + 14);
   ctx.stroke();
 
   /* 5. Headline */
@@ -529,8 +534,8 @@ function T2(ctx, d) {
 
   /* 10. Website URL — bottom-right */
   if (d.web) {
-    ctx.fillStyle = 'rgba(255,255,255,0.58)';
-    ctx.font = '22px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '31px Arial';
     ctx.textAlign = 'right';
     ctx.fillText(d.web, W - 36, mainH - 18);
     ctx.textAlign = 'left';
@@ -616,33 +621,35 @@ function T3(ctx, d) {
 
   /* 4. Date — right aligned, with thin full-width underline */
   const dateY = textAreaY + 56;
+  const alignDateY = dateY - 70; // তারিখের পজিশনটি আগে হিসাব করে নিলাম
 
-  /* Watermark (Jol Chap) — center between image and date */
+  /* Watermark (Jol Chap) — center aligned with date */
   if (logo2 && logo2.width) {
     ctx.save();
-    ctx.globalAlpha = 0.5; // Bright watermark (valid range 0.0 to 1.0)
+    ctx.globalAlpha = 1.0; // লোগোটি উজ্জ্বল দেখানোর জন্য 1.0 করা হলো (হালকা চাইলে 0.5 রাখতে পারেন)
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
-    const wmY = textAreaY + (dateY - textAreaY) / 2 - (wmHeight / 2);
+    
+    // লোগোটিকে তারিখের ঠিক সোজা লাইনে বসানো হলো:
+    const wmY = alignDateY - (wmHeight / 2) - 10; 
+    
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
 
-
-  /* Date — Right side (3rd column) */
   if (d.date) {
     ctx.fillStyle = 'rgba(255,255,255,0.78)';
     ctx.font = '27px Noto Sans Bengali';
     ctx.textAlign = 'right';
-    ctx.fillText(d.date, W - 44, dateY);
+    ctx.fillText(d.date, W - 44, alignDateY);
     ctx.textAlign = 'left';
   }
   ctx.strokeStyle = 'rgba(255,255,255,0.30)';
   ctx.lineWidth = 1.2;
   ctx.beginPath();
-  ctx.moveTo(44, dateY + 14);
-  ctx.lineTo(W - 44, dateY + 14);
+  ctx.moveTo(44, alignDateY + 14);
+  ctx.lineTo(W - 44, alignDateY + 14);
   ctx.stroke();
 
   /* 5. Headline */
@@ -664,33 +671,62 @@ function T3(ctx, d) {
   }
   ctx.textAlign = 'left';
 
-  /* 8. বক্তা/রিপোর্টার নাম — footer RIGHT side */
-  const spkY = fY + 114; // moved down by 60px
+/* 8. বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ (ডাইনামিক অ্যালাইনমেন্ট) */
+  const spkY = fY + 114; 
   const spkRightEdge = W - 36;
-  if (d.sp) {
-    ctx.fillStyle = '#ffcc00';        // golden yellow name
-    ctx.font = 'bold 36px Noto Sans Bengali';
-    ctx.textAlign = 'right';
-    ctx.fillText(d.sp, spkRightEdge, spkY);
-    ctx.textAlign = 'left';
-  }
 
-  /* 8b. Divider line under name */
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  // Line goes from left to right as before, but text is right-aligned
-  ctx.moveTo(W * 0.42, spkY + 14);
-  ctx.lineTo(W - 36, spkY + 14);
-  ctx.stroke();
+  if (d.showDetailsBtn) {
+    // ১. বাটন চেক করা থাকলে — ডানপাশে দেখাবে (Right Aligned)
+    if (d.sp) {
+      ctx.fillStyle = '#ffcc00';        
+      ctx.font = 'bold 41px Noto Sans Bengali'; // ফন্ট সাইজ 36 থেকে 41 করা হলো
+      ctx.textAlign = 'right';
+      ctx.fillText(d.sp, spkRightEdge, spkY);
+      ctx.textAlign = 'left';
+    }
 
-  /* 8c. পদবি/বিভাগ — below name, right aligned */
-  if (d.des) {
-    ctx.fillStyle = 'rgba(200,200,200,0.85)';
-    ctx.font = '26px Noto Sans Bengali';
-    ctx.textAlign = 'right';
-    wrapR(ctx, d.des, spkRightEdge, spkY + 52, W - (W * 0.42) - 36, 36);
-    ctx.textAlign = 'left';
+    /* নাম ও পদবির মাঝখানের ডিভাইডার লাইন (ডানপাশে) */
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.42, spkY + 16);
+    ctx.lineTo(W - 36, spkY + 16);
+    ctx.stroke();
+
+    /* পদবি/বিভাগ (ডানপাশে) */
+    if (d.des) {
+      ctx.fillStyle = 'rgba(200,200,200,0.85)';
+      ctx.font = '31px Noto Sans Bengali'; // ফন্ট সাইজ 26 থেকে 31 করা হলো
+      ctx.textAlign = 'right';
+      wrapR(ctx, d.des, spkRightEdge, spkY + 56, W - (W * 0.42) - 36, 40);
+      ctx.textAlign = 'left';
+    }
+  } else {
+    // ২. বাটন আনচেক করা থাকলে — মাঝখানে চলে যাবে (Center Aligned)
+    if (d.sp) {
+      ctx.fillStyle = '#ffcc00';        
+      ctx.font = 'bold 41px Noto Sans Bengali'; // ফন্ট সাইজ 36 থেকে 41 করা হলো
+      ctx.textAlign = 'center';
+      ctx.fillText(d.sp, W / 2, spkY);
+      ctx.textAlign = 'left';
+    }
+
+    /* নাম ও পদবির মাঝখানের ডিভাইডার লাইন (মাঝখানে) */
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W / 2 - 150, spkY + 16); 
+    ctx.lineTo(W / 2 + 150, spkY + 16);
+    ctx.stroke();
+
+    /* পদবি/বিভাগ (মাঝখানে) */
+    if (d.des) {
+      ctx.fillStyle = 'rgba(200,200,200,0.85)';
+      ctx.font = '31px Noto Sans Bengali'; // ফন্ট সাইজ 26 থেকে 31 করা হলো
+      ctx.textAlign = 'center';
+      wrapC(ctx, d.des, W / 2, spkY + 56, W - 120, 40);
+      ctx.textAlign = 'left';
+    }
   }
 
 
@@ -742,12 +778,20 @@ function T3(ctx, d) {
 
   /* 11. Website URL — bottom-right */
   if (d.web) {
-    ctx.fillStyle = 'rgba(255,255,255,0.58)';
-    ctx.font = '22px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '31px Arial';
     ctx.textAlign = 'right';
     ctx.fillText(d.web, W - 36, mainH - 18);
     ctx.textAlign = 'left';
   }
+  // /* 10. Website URL — bottom-right */
+  // /* 10. Website URL — bottom-right */
+  // const webText = d.web || 'www.nagorsomachar24.com';
+  // ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  // ctx.font = '28px Arial';
+  // ctx.textAlign = 'right';
+  // ctx.fillText(webText, W - 36, mainH - 18);
+  // ctx.textAlign = 'left';
 
   drawAd(ctx);
 }
