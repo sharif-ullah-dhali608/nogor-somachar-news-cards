@@ -359,7 +359,7 @@ function T1(ctx, d) {
 }
 
 /* ══════════════════════════════════════════════════════
-   T2 — AGAMIR SOMOY STYLE (previously T7)
+   T2 —   STYLE (previously T7)
 ══════════════════════════════════════════════════════ */
 function T2(ctx, d) {
   const ah = adH();
@@ -798,8 +798,7 @@ function T3(ctx, d) {
 
 /* ── dispatch ── */
 const FNS = [T1, T2, T3];
-const TNAMES = ['আর্টিকেল স্টাইল', 'আগামীর সময় স্টাইল', 'আগামীর সময় + বক্তা/পদবি'];
-
+const TNAMES = ['নগর সমাচার আর্টিকেল', 'নগর সমাচার স্টাইল', 'নগর সমাচার + বক্তা/পদবি'];
 function drawT(ctx, idx) { ctx.clearRect(0, 0, W, H); FNS[idx](ctx, inp()); }
 function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }
 
