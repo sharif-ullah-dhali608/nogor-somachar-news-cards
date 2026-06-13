@@ -526,9 +526,10 @@ function T2(ctx, d) {
   /* 8. বিস্তারিত কমেন্টে — RIGHT side, top of footer, above logo */
   if (d.showDetailsBtn) {
     const iconR = 20;
-    const btnRowY = fY + 134;           // moved down 50px to sit above website
-    // Measure text to right-align everything
-    ctx.font = '30px Noto Sans Bengali';
+    const btnRowY = fY + 134;           
+    
+    // টেক্সট মেপে ডানপাশে অ্যালাইন করার জন্য
+    ctx.font = 'bold 30px Noto Sans Bengali'; // Bold করা হলো
     const btnLabel = 'বিস্তারিত কমেন্টে';
     const labelW = ctx.measureText(btnLabel).width;
     const iconGap = 14;
@@ -536,22 +537,25 @@ function T2(ctx, d) {
     const btnRightEdge = W - 36;
     const iconX = btnRightEdge - totalBtnW + iconR;
     const iconCY = btnRowY;
-    // Red circle
+    
+    // গোল বৃত্তটি হলুদ (#ffcc00) করা হলো
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
-    ctx.fillStyle = '#c0392b';
+    ctx.fillStyle = '#ffcc00';
     ctx.fill();
-    // White arrow
-    ctx.fillStyle = '#ffffff';
+    
+    // তীরের চিহ্নটি কালো (#000000) করা হলো
+    ctx.fillStyle = '#000000';
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('›', iconX, iconCY);
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
-    // Label right-aligned
-    ctx.fillStyle = 'rgba(255,255,255,0.88)';
-    ctx.font = '30px Noto Sans Bengali';
+    
+    // বাটন টেক্সট হলুদ (#ffcc00) এবং বোল্ড করা হলো
+    ctx.fillStyle = '#ffcc00';
+    ctx.font = 'bold 30px Noto Sans Bengali';
     ctx.fillText(btnLabel, iconX + iconR + iconGap, btnRowY + iconR - 2);
   }
 
@@ -731,7 +735,7 @@ function T3(ctx, d) {
   // স্পিকার/রিপোর্টার নাম
   if (d.sp) {
     ctx.fillStyle = '#ffcc00';        
-    ctx.font = 'bold 41px Noto Sans Bengali'; 
+    ctx.font = 'bold 50px Noto Sans Bengali'; 
     ctx.textAlign = 'right';
     ctx.fillText(d.sp, spkRightEdge, spkY);
     ctx.textAlign = 'left';
@@ -748,7 +752,7 @@ function T3(ctx, d) {
   /* পদবি/বিভাগ */
   if (d.des) {
     ctx.fillStyle = 'rgba(200,200,200,0.85)';
-    ctx.font = '31px Noto Sans Bengali'; 
+    ctx.font = '40px Noto Sans Bengali'; 
     ctx.textAlign = 'right';
     wrapR(ctx, d.des, spkRightEdge, spkY + 56, W - (W * 0.42) - 36, 40);
     ctx.textAlign = 'left';
@@ -772,7 +776,7 @@ function T3(ctx, d) {
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
     ctx.restore();
   }
-/* 10. বিস্তারিত কমেন্টে — Triangle এর ভেতর লোগোর নিচে, ওয়েবসাইটের সোজা */
+/* 10. বিস্তারিত কমেন্টে — বক্তার কালারের মতো হলুদ (#ffcc00) করা হলো */
   if (d.showDetailsBtn) {
     const iconR = 15;
     const btnLabel = 'বিস্তারিত কমেন্টে';
@@ -781,24 +785,20 @@ function T3(ctx, d) {
     const iconGap = 10;
     const totalW = (iconR * 2) + iconGap + labelW;
     
-    // Triangle এর Center X পজিশন (লোগোটি ঠিক যেখানে আছে তার সেন্টার)
+    // Triangle এর Center X পজিশন
     const triCX = (W * 0.40) / 3;
-    
-    // বাটনটিকে Triangle এর ঠিক মাঝখানে বসানো হচ্ছে
     const startX = triCX - (totalW / 2);
     const iconX = startX + iconR;
-    
-    // ওয়েবসাইটের Y পজিশনের সাথে মিলিয়ে সেট করা হচ্ছে (যাতে একদম সোজা থাকে)
     const iconCY = mainH - 25; 
 
-    // লাল গোল বৃত্ত
+    // গোল বৃত্তটি বক্তার কালারের মতো হলুদ (#ffcc00) করা হলো
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
-    ctx.fillStyle = '#c0392b';
+    ctx.fillStyle = '#ffcc00';
     ctx.fill();
 
-    // সাদা তীর চিহ্ন
-    ctx.fillStyle = '#ffffff';
+    // তীরের চিহ্নটি কালো (#000000) করা হলো স্পষ্ট দেখার জন্য
+    ctx.fillStyle = '#000000';
     ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -806,9 +806,9 @@ function T3(ctx, d) {
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
 
-    // বাটন টেক্সট (ওয়েবসাইটের টেক্সটের ঠিক সোজা mainH - 18 তে বসানো হলো)
-    ctx.fillStyle = 'rgba(255,255,255,0.88)';
-    ctx.font = '27px Noto Sans Bengali'; 
+    // বাটন টেক্সটও বক্তার কালারের মতো হলুদ (#ffcc00) করা হলো
+    ctx.fillStyle = '#ffcc00'; 
+    ctx.font = 'bold 27px Noto Sans Bengali'; // একটু ফুটিয়ে তোলার জন্য bold করা হলো
     ctx.fillText(btnLabel, iconX + iconR + iconGap, mainH - 18);
   }
   /* 11. Website URL — bottom-right */
