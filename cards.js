@@ -161,28 +161,45 @@ function radG(ctx, cx, cy, r0, r1, stops) { const g = ctx.createRadialGradient(c
 
 function wrap(ctx, txt, x, y, mw, lh) {
   if (!txt) return 0;
-  const ws = txt.split(' '); let ln = '', ls = [];
-  for (const w of ws) { const t = ln ? ln + ' ' + w : w; if (ctx.measureText(t).width > mw && ln) { ls.push(ln); ln = w; } else ln = t; }
-  ls.push(ln); ls.forEach((l, i) => ctx.fillText(l, x, y + i * lh)); return ls.length;
+  const lines = txt.split('\n'); let ls = [];
+  for (const line of lines) {
+    const ws = line.split(' '); let ln = '';
+    for (const w of ws) {
+      const t = ln ? ln + ' ' + w : w;
+      if (ctx.measureText(t).width > mw && ln) { ls.push(ln.trim()); ln = w; } else ln = t;
+    }
+    if (ln) ls.push(ln.trim());
+  }
+  ls.forEach((l, i) => ctx.fillText(l, x, y + i * lh)); return ls.length;
 }
+
 function wrapC(ctx, txt, cx, y, mw, lh) {/* center */
   if (!txt) return 0;
-  const ws = txt.split(' '); let ln = '', ls = [];
-  for (const w of ws) { const t = ln ? ln + ' ' + w : w; if (ctx.measureText(t).width > mw && ln) { ls.push(ln); ln = w; } else ln = t; }
-  ls.push(ln); ls.forEach((l, i) => ctx.fillText(l, cx, y + i * lh)); return ls.length;
+  const lines = txt.split('\n'); let ls = [];
+  for (const line of lines) {
+    const ws = line.split(' '); let ln = '';
+    for (const w of ws) {
+      const t = ln ? ln + ' ' + w : w;
+      if (ctx.measureText(t).width > mw && ln) { ls.push(ln.trim()); ln = w; } else ln = t;
+    }
+    if (ln) ls.push(ln.trim());
+  }
+  ls.forEach((l, i) => ctx.fillText(l, cx, y + i * lh)); return ls.length;
 }
+
 function wrapR(ctx, txt, rx, y, mw, lh) {
   /* right-aligned word wrap — rx is the right edge X */
   if (!txt) return 0;
-  const ws = txt.split(' '); let ln = '', ls = [];
-  for (const w of ws) {
-    const t = ln ? ln + ' ' + w : w;
-    if (ctx.measureText(t).width > mw && ln) { ls.push(ln); ln = w; }
-    else ln = t;
+  const lines = txt.split('\n'); let ls = [];
+  for (const line of lines) {
+    const ws = line.split(' '); let ln = '';
+    for (const w of ws) {
+      const t = ln ? ln + ' ' + w : w;
+      if (ctx.measureText(t).width > mw && ln) { ls.push(ln.trim()); ln = w; } else ln = t;
+    }
+    if (ln) ls.push(ln.trim());
   }
-  ls.push(ln);
-  ls.forEach((l, i) => ctx.fillText(l, rx, y + i * lh));
-  return ls.length;
+  ls.forEach((l, i) => ctx.fillText(l, rx, y + i * lh)); return ls.length;
 }
 function pill(ctx, x, y, txt, fs = 20, px = 14, py = 8, bg = '#c0392b', fg = '#fff') {
   ctx.font = `bold ${fs}px Noto Sans Bengali`;
@@ -468,23 +485,42 @@ function T2(ctx, d) {
   ctx.lineTo(W - 44, alignDateY + 14);
   ctx.stroke();
 
-  /* 5. Headline */
+/* 5. Headline (Dynamic Alignment & Max Width) */
   const hlFontSize = d.hlFs || 60;
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
   nosh(ctx);
-  const hlMaxW = W - 120; // Reduced to prevent cutoff
+  
+  // হেডলাইনের জন্য সর্বোচ্চ জায়গা বাড়িয়ে দেওয়া হলো, যাতে সহজে লাইন না ভাঙে
+  const hlMaxW = W - 88; 
   const lh = hlFontSize * 1.42;
-  let hlLines;
-  if (d.showDetailsBtn) {
-    ctx.textAlign = 'right';
-    const hlY = dateY + 62;
-    hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
-  } else {
-    ctx.textAlign = 'center';
-    const hlY = dateY + 90; // Move down slightly when centered
-    hlLines = wrapC(ctx, d.hl, W / 2, hlY, hlMaxW, lh);
+
+  // হেডলাইনটি ক্যানভাসে কয় লাইন জায়গা নিবে তা নিখুঁতভাবে হিসাব করা হচ্ছে
+  let ls = [];
+  const lines = d.hl.split('\n');
+  for (const line of lines) {
+    const ws = line.split(' '); let ln = '';
+    for (const w of ws) {
+      const t = ln ? ln + ' ' + w : w;
+      if (ctx.measureText(t).width > hlMaxW && ln) { ls.push(ln.trim()); ln = w; }
+      else ln = t;
+    }
+    if (ln) ls.push(ln.trim());
   }
+  const numLines = ls.length;
+
+  // লাইন সংখ্যা অনুযায়ী ভার্টিক্যাল সেন্টার অ্যাডজাস্টমেন্ট
+  let yOffset = 0;
+  if (numLines === 1) {
+    yOffset = 45; // ১ লাইন হলে ৪৫ পিক্সেল নিচে নেমে আসবে
+  } else if (numLines > 2) {
+    yOffset = -20; // ৩ লাইন বা তার বেশি হলে উপরে উঠে যাবে
+  }
+
+  /* হেডলাইন সবসময় ডানপাশে ফিক্সড থাকবে (বাটন অন বা অফ যাই থাকুক) */
+  ctx.textAlign = 'right';
+  const hlY = dateY + 62 + yOffset;
+  let hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
   ctx.textAlign = 'left';
 
   /* 8. বিস্তারিত কমেন্টে — RIGHT side, top of footer, above logo */
@@ -535,7 +571,7 @@ function T2(ctx, d) {
   /* 10. Website URL — bottom-right */
   if (d.web) {
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '31px Arial';
+    ctx.font = '40px Arial';
     ctx.textAlign = 'right';
     ctx.fillText(d.web, W - 36, mainH - 18);
     ctx.textAlign = 'left';
@@ -652,83 +688,71 @@ function T3(ctx, d) {
   ctx.lineTo(W - 44, alignDateY + 14);
   ctx.stroke();
 
-  /* 5. Headline */
+/* 5. Headline (Dynamic Vertical Centering) */
   const hlFontSize = d.hlFs || 60;
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
   nosh(ctx);
   const hlMaxW = W - 120; // Reduced to prevent cutoff
   const lh = hlFontSize * 1.42;
-  let hlLines;
-  if (d.showDetailsBtn) {
-    ctx.textAlign = 'right';
-    const hlY = dateY + 62;
-    hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
-  } else {
-    ctx.textAlign = 'center';
-    const hlY = dateY + 90; // Move down slightly when centered
-    hlLines = wrapC(ctx, d.hl, W / 2, hlY, hlMaxW, lh);
+
+  // হেডলাইনটি ক্যানভাসে কয় লাইন জায়গা নিবে তা আগে হিসাব করা হচ্ছে
+  const ws = d.hl.split(' ');
+  let ln = '', ls = [];
+  for (const w of ws) {
+    const t = ln ? ln + ' ' + w : w;
+    if (ctx.measureText(t).width > hlMaxW && ln) { ls.push(ln); ln = w; }
+    else ln = t;
   }
+  ls.push(ln);
+  const numLines = ls.length;
+
+  // লাইন সংখ্যা অনুযায়ী Y পজিশন অ্যাডজাস্টমেন্ট (১ লাইন হলে নিচে নামবে)
+  let yOffset = 0;
+  if (numLines === 1) {
+    yOffset = 45; // ১ লাইন হলে ৪৫ পিক্সেল নিচে নেমে ভার্টিক্যালি সেন্টার হবে
+  } else if (numLines > 2) {
+    yOffset = -20; // ৩ লাইন বা তার বেশি হলে একটু উপরে উঠে যাবে যাতে নিচে জায়গা থাকে
+  }
+
+/* হেডলাইন সবসময় ডানপাশে ফিক্সড থাকবে (বাটন অন বা অফ যাই থাকুক) */
+  ctx.textAlign = 'right';
+  const hlY = dateY + 62 + yOffset;
+  let hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
   ctx.textAlign = 'left';
 
-/* 8. বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ (ডাইনামিক অ্যালাইনমেন্ট) */
-  const spkY = fY + 114; 
-  const spkRightEdge = W - 36;
 
-  if (d.showDetailsBtn) {
-    // ১. বাটন চেক করা থাকলে — ডানপাশে দেখাবে (Right Aligned)
-    if (d.sp) {
-      ctx.fillStyle = '#ffcc00';        
-      ctx.font = 'bold 41px Noto Sans Bengali'; // ফন্ট সাইজ 36 থেকে 41 করা হলো
-      ctx.textAlign = 'right';
-      ctx.fillText(d.sp, spkRightEdge, spkY);
-      ctx.textAlign = 'left';
-    }
 
-    /* নাম ও পদবির মাঝখানের ডিভাইডার লাইন (ডানপাশে) */
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(W * 0.42, spkY + 16);
-    ctx.lineTo(W - 36, spkY + 16);
-    ctx.stroke();
+/* 8. বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ (সবসময় ডানপাশে ফিক্সড থাকবে) */
+  // আগের 114 পিক্সেলের জায়গায় 80 পিক্সেল দেওয়া হলো, ফলে এটি ৩৪ পিক্সেল উপরে উঠে যাবে
+  const spkY = fY + 70; 
+  const spkRightEdge = W - 30;
 
-    /* পদবি/বিভাগ (ডানপাশে) */
-    if (d.des) {
-      ctx.fillStyle = 'rgba(200,200,200,0.85)';
-      ctx.font = '31px Noto Sans Bengali'; // ফন্ট সাইজ 26 থেকে 31 করা হলো
-      ctx.textAlign = 'right';
-      wrapR(ctx, d.des, spkRightEdge, spkY + 56, W - (W * 0.42) - 36, 40);
-      ctx.textAlign = 'left';
-    }
-  } else {
-    // ২. বাটন আনচেক করা থাকলে — মাঝখানে চলে যাবে (Center Aligned)
-    if (d.sp) {
-      ctx.fillStyle = '#ffcc00';        
-      ctx.font = 'bold 41px Noto Sans Bengali'; // ফন্ট সাইজ 36 থেকে 41 করা হলো
-      ctx.textAlign = 'center';
-      ctx.fillText(d.sp, W / 2, spkY);
-      ctx.textAlign = 'left';
-    }
-
-    /* নাম ও পদবির মাঝখানের ডিভাইডার লাইন (মাঝখানে) */
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(W / 2 - 150, spkY + 16); 
-    ctx.lineTo(W / 2 + 150, spkY + 16);
-    ctx.stroke();
-
-    /* পদবি/বিভাগ (মাঝখানে) */
-    if (d.des) {
-      ctx.fillStyle = 'rgba(200,200,200,0.85)';
-      ctx.font = '31px Noto Sans Bengali'; // ফন্ট সাইজ 26 থেকে 31 করা হলো
-      ctx.textAlign = 'center';
-      wrapC(ctx, d.des, W / 2, spkY + 56, W - 120, 40);
-      ctx.textAlign = 'left';
-    }
+  // স্পিকার/রিপোর্টার নাম
+  if (d.sp) {
+    ctx.fillStyle = '#ffcc00';        
+    ctx.font = 'bold 41px Noto Sans Bengali'; 
+    ctx.textAlign = 'right';
+    ctx.fillText(d.sp, spkRightEdge, spkY);
+    ctx.textAlign = 'left';
   }
 
+  /* নাম ও পদবির মাঝখানের ডিভাইডার লাইন */
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(W * 0.42, spkY + 16);
+  ctx.lineTo(W - 36, spkY + 16);
+  ctx.stroke();
+
+  /* পদবি/বিভাগ */
+  if (d.des) {
+    ctx.fillStyle = 'rgba(200,200,200,0.85)';
+    ctx.font = '31px Noto Sans Bengali'; 
+    ctx.textAlign = 'right';
+    wrapR(ctx, d.des, spkRightEdge, spkY + 56, W - (W * 0.42) - 36, 40);
+    ctx.textAlign = 'left';
+  }
 
   /* 9. Logo — triangle এর centroid-এ centered (logo.png ব্যবহার) */
   const logoSrc = rawLogo || logo;
@@ -737,8 +761,10 @@ function T3(ctx, d) {
     const triCY = (mainH + (fY - 40) + mainH) / 3;
     const lH = 72;
     const lW = (logoSrc.width / logoSrc.height) * lH;
-    const lX = triCX - lW / 2;
-    const lY = triCY - lH / 2;
+    const lX = (triCX - lW / 2) - 20;    
+    // লোগোটিকে আগের পজিশন থেকে ২৫ পিক্সেল উপরে তোলা হলো
+    const lY = triCY - lH / 2 - 25; 
+    
     ctx.save();
     ctx.globalAlpha = 1.0; // Fully bright (valid range 0.0 to 1.0)
     ctx.shadowBlur = 8;
@@ -746,24 +772,32 @@ function T3(ctx, d) {
     ctx.drawImage(logoSrc, lX, lY, lW, lH);
     ctx.restore();
   }
-
-  /* 10. বিস্তারিত কমেন্টে — Centered at bottom */
+/* 10. বিস্তারিত কমেন্টে — Triangle এর ভেতর লোগোর নিচে, ওয়েবসাইটের সোজা */
   if (d.showDetailsBtn) {
     const iconR = 15;
-    const iconCY = mainH - 24;
-    ctx.font = '22px Noto Sans Bengali';
     const btnLabel = 'বিস্তারিত কমেন্টে';
+    ctx.font = '27px Noto Sans Bengali'; 
     const labelW = ctx.measureText(btnLabel).width;
     const iconGap = 10;
     const totalW = (iconR * 2) + iconGap + labelW;
-    const startX = (W - totalW) / 2;
+    
+    // Triangle এর Center X পজিশন (লোগোটি ঠিক যেখানে আছে তার সেন্টার)
+    const triCX = (W * 0.40) / 3;
+    
+    // বাটনটিকে Triangle এর ঠিক মাঝখানে বসানো হচ্ছে
+    const startX = triCX - (totalW / 2);
     const iconX = startX + iconR;
+    
+    // ওয়েবসাইটের Y পজিশনের সাথে মিলিয়ে সেট করা হচ্ছে (যাতে একদম সোজা থাকে)
+    const iconCY = mainH - 25; 
 
+    // লাল গোল বৃত্ত
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
     ctx.fillStyle = '#c0392b';
     ctx.fill();
 
+    // সাদা তীর চিহ্ন
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
@@ -772,26 +806,19 @@ function T3(ctx, d) {
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
 
+    // বাটন টেক্সট (ওয়েবসাইটের টেক্সটের ঠিক সোজা mainH - 18 তে বসানো হলো)
     ctx.fillStyle = 'rgba(255,255,255,0.88)';
+    ctx.font = '27px Noto Sans Bengali'; 
     ctx.fillText(btnLabel, iconX + iconR + iconGap, mainH - 18);
   }
-
   /* 11. Website URL — bottom-right */
   if (d.web) {
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '31px Arial';
+    ctx.font = '42px Arial';
     ctx.textAlign = 'right';
     ctx.fillText(d.web, W - 36, mainH - 18);
     ctx.textAlign = 'left';
   }
-  // /* 10. Website URL — bottom-right */
-  // /* 10. Website URL — bottom-right */
-  // const webText = d.web || 'www.nagorsomachar24.com';
-  // ctx.fillStyle = 'rgba(255,255,255,0.9)';
-  // ctx.font = '28px Arial';
-  // ctx.textAlign = 'right';
-  // ctx.fillText(webText, W - 36, mainH - 18);
-  // ctx.textAlign = 'left';
 
   drawAd(ctx);
 }
