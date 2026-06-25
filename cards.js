@@ -1,5 +1,6 @@
 /* নগর সমাচার ২৪ — cards.js — 3 exact reference templates */
-const W = 1080, H = 1080;
+const W = 1080;
+let H = 1080;
 const COLORS = ['#c0392b', '#e74c3c', '#b71c1c', '#e67e22', '#f39c12', '#43a047', '#1565c0', '#8e44ad', '#000', '#1a1a1a', '#fff'];
 let img1 = null, img2 = null, adImg = null, logo = null, accent = '#c0392b', curT = 0, showAd = false;
 let img1Scale = 1.0, img2Scale = 1.0;
@@ -522,65 +523,47 @@ function T2(ctx, d) {
   const hlY = dateY + 62 + yOffset;
   let hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
   ctx.textAlign = 'left';
-
-  /* 8. বিস্তারিত কমেন্টে — RIGHT side, top of footer, above logo */
+/* 8. Website URL — বামপাশে (Triangle এর নিচে) বসানো হলো */
+  if (d.web) {
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '30px Arial'; 
+    ctx.textAlign = 'left';
+    ctx.fillText(d.web, 25, mainH - 22); 
+  }
+/* 10. বিস্তারিত কমেন্টে — আরও বামে সরানো হলো */
   if (d.showDetailsBtn) {
-    const iconR = 20;
-    const btnRowY = fY + 134;           
-    
-    // টেক্সট মেপে ডানপাশে অ্যালাইন করার জন্য
-    ctx.font = 'bold 30px Noto Sans Bengali'; // Bold করা হলো
+    const iconR = 15;
     const btnLabel = 'বিস্তারিত কমেন্টে';
+    ctx.font = 'bold 27px Noto Sans Bengali'; 
     const labelW = ctx.measureText(btnLabel).width;
-    const iconGap = 14;
-    const totalBtnW = iconR * 2 + iconGap + labelW;
-    const btnRightEdge = W - 36;
-    const iconX = btnRightEdge - totalBtnW + iconR;
-    const iconCY = btnRowY;
+    const iconGap = 10;
     
-    // গোল বৃত্তটি হলুদ (#ffcc00) করা হলো
+    // আগে W - 44 ছিল, এখন আরও একটু বামে সরাতে W - 75 করা হলো
+    const btnRightEdge = W - 44;
+    
+    // বাটন টেক্সট 
+    ctx.fillStyle = '#ffcc00'; 
+    ctx.textAlign = 'right';
+    ctx.fillText(btnLabel, btnRightEdge, mainH - 20);
+    ctx.textAlign = 'left'; 
+
+    // আইকনের পজিশন
+    const iconX = btnRightEdge - labelW - iconGap - iconR;
+    const iconCY = mainH - 28; 
+
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
     ctx.fillStyle = '#ffcc00';
     ctx.fill();
-    
-    // তীরের চিহ্নটি কালো (#000000) করা হলো
+
     ctx.fillStyle = '#000000';
-    ctx.font = 'bold 24px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('›', iconX, iconCY);
     ctx.textBaseline = 'alphabetic';
     ctx.textAlign = 'left';
-    
-    // বাটন টেক্সট হলুদ (#ffcc00) এবং বোল্ড করা হলো
-    ctx.fillStyle = '#ffcc00';
-    ctx.font = 'bold 30px Noto Sans Bengali';
-    ctx.fillText(btnLabel, iconX + iconR + iconGap, btnRowY + iconR - 2);
   }
-
-  /* 9. Logo — right side, below বিস্তারিত কমেন্টে */
-  const logoSrc = rawLogo || logo2 || logo;
-  if (logoSrc && logoSrc.width) {
-    const lH = 80;
-    const lW = (logoSrc.width / logoSrc.height) * lH;
-    const lX = 20;
-    const lY = fY + 100;              // pushed lower, below the button row
-    ctx.save();
-    ctx.globalAlpha = 1.0; // Fully bright
-    ctx.drawImage(logoSrc, lX, lY, lW, lH);
-    ctx.restore();
-  }
-
-  /* 10. Website URL — bottom-right */
-  if (d.web) {
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '40px Arial';
-    ctx.textAlign = 'right';
-    ctx.fillText(d.web, W - 36, mainH - 18);
-    ctx.textAlign = 'left';
-  }
-
   drawAd(ctx);
 }
 
@@ -724,99 +707,83 @@ function T3(ctx, d) {
   const hlY = dateY + 62 + yOffset;
   let hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
   ctx.textAlign = 'left';
+//Website URL
+if (d.web) {
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '30px Arial'; 
+    ctx.textAlign = 'left';
+    // বাম দিক থেকে 36 পিক্সেল ফাঁকা রেখে বসানো হলো
+    ctx.fillText(d.web, 25, mainH - 22); 
+  }
 
-
-
-/* 8. বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ (সবসময় ডানপাশে ফিক্সড থাকবে) */
-  // আগের 114 পিক্সেলের জায়গায় 80 পিক্সেল দেওয়া হলো, ফলে এটি ৩৪ পিক্সেল উপরে উঠে যাবে
-  const spkY = fY + 70; 
-  const spkRightEdge = W - 30;
+/* 8. বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ (শিরোনামের সাথে ডানপাশে ফিক্সড) */
+  const spkY = fY + 80; 
+  // আগে W - 36 ছিল, এখন শিরোনামের সাথে মেলাতে W - 44 করা হলো
+  const spkRightEdge = W - 36; 
 
   // স্পিকার/রিপোর্টার নাম
   if (d.sp) {
     ctx.fillStyle = '#ffcc00';        
-    ctx.font = 'bold 50px Noto Sans Bengali'; 
+    ctx.font = 'bold 41px SolaimanLipi, AdorshoLipi, Noto Sans Bengali'; 
     ctx.textAlign = 'right';
     ctx.fillText(d.sp, spkRightEdge, spkY);
     ctx.textAlign = 'left';
   }
 
   /* নাম ও পদবির মাঝখানের ডিভাইডার লাইন */
+  const dividerY = spkY + 16;
   ctx.strokeStyle = 'rgba(255,255,255,0.25)';
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(W * 0.42, spkY + 16);
-  ctx.lineTo(W - 36, spkY + 16);
+  ctx.moveTo(W * 0.42, dividerY);
+  ctx.lineTo(W - 44, dividerY); // লাইনটিও ৪৪ পিক্সেল পর্যন্ত করা হলো
   ctx.stroke();
 
   /* পদবি/বিভাগ */
   if (d.des) {
+    const webY = mainH - 18; 
+    const desY = dividerY + ((webY - dividerY) / 2) - 10; 
+    
     ctx.fillStyle = 'rgba(200,200,200,0.85)';
-    ctx.font = '40px Noto Sans Bengali'; 
+    ctx.font = '31px Noto Sans Bengali'; 
     ctx.textAlign = 'right';
-    wrapR(ctx, d.des, spkRightEdge, spkY + 56, W - (W * 0.42) - 36, 40);
+    
+    // W - 44 ব্যবহার করা হলো
+    wrapR(ctx, d.des, spkRightEdge, desY, W - (W * 0.40) - 40, 38); 
     ctx.textAlign = 'left';
   }
-
-  /* 9. Logo — triangle এর centroid-এ centered (logo.png ব্যবহার) */
-  const logoSrc = rawLogo || logo;
-  if (logoSrc && logoSrc.width) {
-    const triCX = (W * 0.40) / 3;
-    const triCY = (mainH + (fY - 40) + mainH) / 3;
-    const lH = 72;
-    const lW = (logoSrc.width / logoSrc.height) * lH;
-    const lX = (triCX - lW / 2) - 20;    
-    // লোগোটিকে আগের পজিশন থেকে ২৫ পিক্সেল উপরে তোলা হলো
-    const lY = triCY - lH / 2 - 25; 
-    
-    ctx.save();
-    ctx.globalAlpha = 1.0; // Fully bright (valid range 0.0 to 1.0)
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-    ctx.drawImage(logoSrc, lX, lY, lW, lH);
-    ctx.restore();
-  }
-/* 10. বিস্তারিত কমেন্টে — বক্তার কালারের মতো হলুদ (#ffcc00) করা হলো */
+  /* 10. বিস্তারিত কমেন্টে — আরও বামে সরানো হলো */
   if (d.showDetailsBtn) {
     const iconR = 15;
     const btnLabel = 'বিস্তারিত কমেন্টে';
-    ctx.font = '27px Noto Sans Bengali'; 
+    ctx.font = 'bold 27px Noto Sans Bengali'; 
     const labelW = ctx.measureText(btnLabel).width;
     const iconGap = 10;
-    const totalW = (iconR * 2) + iconGap + labelW;
     
-    // Triangle এর Center X পজিশন
-    const triCX = (W * 0.40) / 3;
-    const startX = triCX - (totalW / 2);
-    const iconX = startX + iconR;
-    const iconCY = mainH - 25; 
+    // আগে W - 44 ছিল, এখন আরও একটু বামে সরাতে W - 75 করা হলো
+    const btnRightEdge = W - 44;
+    
+    // বাটন টেক্সট 
+    ctx.fillStyle = '#ffcc00'; 
+    ctx.textAlign = 'right';
+    ctx.fillText(btnLabel, btnRightEdge, mainH - 20);
+    ctx.textAlign = 'left'; 
 
-    // গোল বৃত্তটি বক্তার কালারের মতো হলুদ (#ffcc00) করা হলো
+    // আইকনের পজিশন
+    const iconX = btnRightEdge - labelW - iconGap - iconR;
+    const iconCY = mainH - 28; 
+
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
     ctx.fillStyle = '#ffcc00';
     ctx.fill();
 
-    // তীরের চিহ্নটি কালো (#000000) করা হলো স্পষ্ট দেখার জন্য
     ctx.fillStyle = '#000000';
     ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('›', iconX, iconCY);
     ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
-
-    // বাটন টেক্সটও বক্তার কালারের মতো হলুদ (#ffcc00) করা হলো
-    ctx.fillStyle = '#ffcc00'; 
-    ctx.font = 'bold 27px Noto Sans Bengali'; // একটু ফুটিয়ে তোলার জন্য bold করা হলো
-    ctx.fillText(btnLabel, iconX + iconR + iconGap, mainH - 18);
-  }
-  /* 11. Website URL — bottom-right */
-  if (d.web) {
-    ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '42px Arial';
-    ctx.textAlign = 'right';
-    ctx.fillText(d.web, W - 36, mainH - 18);
     ctx.textAlign = 'left';
   }
 
@@ -827,22 +794,68 @@ function T3(ctx, d) {
 const FNS = [T1, T2, T3];
 const TNAMES = ['নগর সমাচার আর্টিকেল', 'নগর সমাচার স্টাইল', 'নগর সমাচার + বক্তা/পদবি'];
 function drawT(ctx, idx) { ctx.clearRect(0, 0, W, H); FNS[idx](ctx, inp()); }
-function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }
+// function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }
+function rf() { 
+  // বিজ্ঞাপন অন থাকলে ক্যানভাসের হাইট ১২০ পিক্সেল বেড়ে যাবে (1200px)
+  H = showAd ? 1080 + 120 : 1080; 
+  
+  // HTML ক্যানভাসের সাইজ রিয়েল-টাইমে আপডেট করা
+  const cvs = document.getElementById('mainCanvas');
+  if (cvs.height !== H) cvs.height = H;
+  
+  drawT(cvs.getContext('2d'), curT); 
+  document.getElementById('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; 
+}
 
 function rth() {
   const g = $('tgrid'); g.innerHTML = '';
+  
+  // থাম্বনেইলগুলোর হাইটও বিজ্ঞাপনের সাথে তাল মিলিয়ে পরিবর্তন হবে
+  H = showAd ? 1080 + 120 : 1080; 
+  
   FNS.forEach((_, i) => {
     const d = document.createElement('div'); d.className = 'tc' + (i === curT ? ' on' : '');
-    const tc = document.createElement('canvas'); tc.width = 300; tc.height = 300;
+    const tc = document.createElement('canvas'); 
+    tc.width = 300; 
+    
+    // হাইটের রেশিও অনুযায়ী থাম্বনেইলের উচ্চতা নির্ধারণ
+    tc.height = showAd ? Math.round(300 * (H / W)) : 300;
+    
     const num = document.createElement('div'); num.className = 'tnum'; num.textContent = i + 1;
     const nm = document.createElement('div'); nm.className = 'tcn'; nm.textContent = TNAMES[i];
     d.append(tc, num, nm);
-    d.onclick = () => { document.querySelectorAll('.tc').forEach(x => x.classList.remove('on')); d.classList.add('on'); curT = i; rf(); };
+    
+    d.onclick = () => { 
+      document.querySelectorAll('.tc').forEach(x => x.classList.remove('on')); 
+      d.classList.add('on'); 
+      curT = i; 
+
+      // T2 তে ক্লিক করলে ডিফল্ট হেডলাইন
+      const hlInput = $('headline');
+      if (curT === 1 && (!hlInput.value || hlInput.value.trim() === 'শিরোনাম')) {
+        hlInput.value = 'দেশের সর্বশেষ গুরুত্বপূর্ণ সংবাদ শিরোনাম এখানে লিখুন';
+      }
+
+      rf(); 
+    };
+    
     g.append(d);
-    const c2 = tc.getContext('2d'); c2.save(); c2.scale(300 / W, 300 / H); drawT(c2, i); c2.restore();
+    const c2 = tc.getContext('2d'); 
+    c2.save(); 
+    c2.scale(tc.width / W, tc.height / H); 
+    drawT(c2, i); 
+    c2.restore();
   });
 }
 
+// পেজ লোড হওয়ার সাথে সাথে বিজ্ঞাপন বাটনটি ডিফল্টভাবে অফ রাখা
+showAd = false;
+if (document.getElementById('adTog')) {
+  document.getElementById('adTog').classList.remove('on');
+}
+if (document.getElementById('adLbl')) {
+  document.getElementById('adLbl').textContent = 'বিজ্ঞাপন লুকানো';
+}
 function buildColors() {
   const pal = $('colorPalette');
   COLORS.forEach(c => {
