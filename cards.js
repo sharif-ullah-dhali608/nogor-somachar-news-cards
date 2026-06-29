@@ -244,14 +244,15 @@ function roundedRect(ctx, x, y, w, h, r) {
 /* ── AD FOOTER ── */
 const AD_H = 120;
 function adH() { return showAd ? AD_H : 0; }
-function drawAd(ctx) {
+function drawAd(ctx, customW) {
   if (!showAd) return;
+  const cw = customW || W;
   const y = H - AD_H;
-  if (adImg) { cov(ctx, adImg, 0, y, W, AD_H, 1, adImgScale, adImgOffX, adImgOffY); }
+  if (adImg) { cov(ctx, adImg, 0, y, cw, AD_H, 1, adImgScale, adImgOffX, adImgOffY); }
   else {
-    ctx.fillStyle = '#f5c842'; ctx.fillRect(0, y, W, AD_H);
+    ctx.fillStyle = '#f5c842'; ctx.fillRect(0, y, cw, AD_H);
     ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.font = 'bold 22px Noto Sans Bengali'; ctx.textAlign = 'center';
-    ctx.fillText('বিজ্ঞাপন এলাকা — Ad Image আপলোড করুন', W / 2, y + AD_H / 2 + 8); ctx.textAlign = 'left';
+    ctx.fillText('বিজ্ঞাপন এলাকা — Ad Image আপলোড করুন', cw / 2, y + AD_H / 2 + 8); ctx.textAlign = 'left';
   }
 }
 
@@ -463,10 +464,10 @@ function T2(ctx, d) {
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
-    
+
     // লোগোটিকে তারিখের ঠিক সোজা লাইনে বসানো হলো:
-    const wmY = alignDateY - (wmHeight / 2) - 10; 
-    
+    const wmY = alignDateY - (wmHeight / 2) - 10;
+
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
@@ -486,14 +487,14 @@ function T2(ctx, d) {
   ctx.lineTo(W - 44, alignDateY + 14);
   ctx.stroke();
 
-/* 5. Headline (Dynamic Alignment & Max Width) */
+  /* 5. Headline (Dynamic Alignment & Max Width) */
   const hlFontSize = d.hlFs || 60;
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
   nosh(ctx);
-  
+
   // হেডলাইনের জন্য সর্বোচ্চ জায়গা বাড়িয়ে দেওয়া হলো, যাতে সহজে লাইন না ভাঙে
-  const hlMaxW = W - 88; 
+  const hlMaxW = W - 88;
   const lh = hlFontSize * 1.42;
 
   // হেডলাইনটি ক্যানভাসে কয় লাইন জায়গা নিবে তা নিখুঁতভাবে হিসাব করা হচ্ছে
@@ -523,33 +524,33 @@ function T2(ctx, d) {
   const hlY = dateY + 62 + yOffset;
   let hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
   ctx.textAlign = 'left';
-/* 8. Website URL — বামপাশে (Triangle এর নিচে) বসানো হলো */
+  /* 8. Website URL — বামপাশে (Triangle এর নিচে) বসানো হলো */
   if (d.web) {
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '30px Arial'; 
+    ctx.font = '30px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(d.web, 25, mainH - 22); 
+    ctx.fillText(d.web, 25, mainH - 22);
   }
-/* 10. বিস্তারিত কমেন্টে — আরও বামে সরানো হলো */
+  /* 10. বিস্তারিত কমেন্টে — আরও বামে সরানো হলো */
   if (d.showDetailsBtn) {
     const iconR = 15;
     const btnLabel = 'বিস্তারিত কমেন্টে';
-    ctx.font = 'bold 27px Noto Sans Bengali'; 
+    ctx.font = 'bold 27px Noto Sans Bengali';
     const labelW = ctx.measureText(btnLabel).width;
     const iconGap = 10;
-    
+
     // আগে W - 44 ছিল, এখন আরও একটু বামে সরাতে W - 75 করা হলো
     const btnRightEdge = W - 44;
-    
+
     // বাটন টেক্সট 
-    ctx.fillStyle = '#ffcc00'; 
+    ctx.fillStyle = '#ffcc00';
     ctx.textAlign = 'right';
     ctx.fillText(btnLabel, btnRightEdge, mainH - 20);
-    ctx.textAlign = 'left'; 
+    ctx.textAlign = 'left';
 
     // আইকনের পজিশন
     const iconX = btnRightEdge - labelW - iconGap - iconR;
-    const iconCY = mainH - 28; 
+    const iconCY = mainH - 28;
 
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
@@ -653,10 +654,10 @@ function T3(ctx, d) {
     const wmWidth = 320;
     const wmHeight = (logo2.height / logo2.width) * wmWidth;
     const wmX = (W - wmWidth) / 2;
-    
+
     // লোগোটিকে তারিখের ঠিক সোজা লাইনে বসানো হলো:
-    const wmY = alignDateY - (wmHeight / 2) - 10; 
-    
+    const wmY = alignDateY - (wmHeight / 2) - 10;
+
     ctx.drawImage(logo2, wmX, wmY, wmWidth, wmHeight);
     ctx.restore();
   }
@@ -675,7 +676,7 @@ function T3(ctx, d) {
   ctx.lineTo(W - 44, alignDateY + 14);
   ctx.stroke();
 
-/* 5. Headline (Dynamic Vertical Centering) */
+  /* 5. Headline (Dynamic Vertical Centering) */
   const hlFontSize = d.hlFs || 60;
   ctx.fillStyle = '#ffffff';
   ctx.font = `bold ${hlFontSize}px Noto Serif Bengali, Noto Sans Bengali`;
@@ -702,29 +703,29 @@ function T3(ctx, d) {
     yOffset = -20; // ৩ লাইন বা তার বেশি হলে একটু উপরে উঠে যাবে যাতে নিচে জায়গা থাকে
   }
 
-/* হেডলাইন সবসময় ডানপাশে ফিক্সড থাকবে (বাটন অন বা অফ যাই থাকুক) */
+  /* হেডলাইন সবসময় ডানপাশে ফিক্সড থাকবে (বাটন অন বা অফ যাই থাকুক) */
   ctx.textAlign = 'right';
   const hlY = dateY + 62 + yOffset;
   let hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
   ctx.textAlign = 'left';
-//Website URL
-if (d.web) {
+  //Website URL
+  if (d.web) {
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = '30px Arial'; 
+    ctx.font = '30px Arial';
     ctx.textAlign = 'left';
     // বাম দিক থেকে 36 পিক্সেল ফাঁকা রেখে বসানো হলো
-    ctx.fillText(d.web, 25, mainH - 22); 
+    ctx.fillText(d.web, 25, mainH - 22);
   }
 
-/* 8. বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ (শিরোনামের সাথে ডানপাশে ফিক্সড) */
-  const spkY = fY + 80; 
+  /* 8. বক্তা/রিপোর্টার নাম ও পদবি/বিভাগ (শিরোনামের সাথে ডানপাশে ফিক্সড) */
+  const spkY = fY + 80;
   // আগে W - 36 ছিল, এখন শিরোনামের সাথে মেলাতে W - 44 করা হলো
-  const spkRightEdge = W - 36; 
+  const spkRightEdge = W - 36;
 
   // স্পিকার/রিপোর্টার নাম
   if (d.sp) {
-    ctx.fillStyle = '#ffcc00';        
-    ctx.font = 'bold 41px SolaimanLipi, AdorshoLipi, Noto Sans Bengali'; 
+    ctx.fillStyle = '#ffcc00';
+    ctx.font = 'bold 41px SolaimanLipi, AdorshoLipi, Noto Sans Bengali';
     ctx.textAlign = 'right';
     ctx.fillText(d.sp, spkRightEdge, spkY);
     ctx.textAlign = 'left';
@@ -741,37 +742,37 @@ if (d.web) {
 
   /* পদবি/বিভাগ */
   if (d.des) {
-    const webY = mainH - 18; 
-    const desY = dividerY + ((webY - dividerY) / 2) - 10; 
-    
+    const webY = mainH - 18;
+    const desY = dividerY + ((webY - dividerY) / 2) - 10;
+
     ctx.fillStyle = 'rgba(200,200,200,0.85)';
-    ctx.font = '31px Noto Sans Bengali'; 
+    ctx.font = '31px Noto Sans Bengali';
     ctx.textAlign = 'right';
-    
+
     // W - 44 ব্যবহার করা হলো
-    wrapR(ctx, d.des, spkRightEdge, desY, W - (W * 0.40) - 40, 38); 
+    wrapR(ctx, d.des, spkRightEdge, desY, W - (W * 0.40) - 40, 38);
     ctx.textAlign = 'left';
   }
   /* 10. বিস্তারিত কমেন্টে — আরও বামে সরানো হলো */
   if (d.showDetailsBtn) {
     const iconR = 15;
     const btnLabel = 'বিস্তারিত কমেন্টে';
-    ctx.font = 'bold 27px Noto Sans Bengali'; 
+    ctx.font = 'bold 27px Noto Sans Bengali';
     const labelW = ctx.measureText(btnLabel).width;
     const iconGap = 10;
-    
+
     // আগে W - 44 ছিল, এখন আরও একটু বামে সরাতে W - 75 করা হলো
     const btnRightEdge = W - 44;
-    
+
     // বাটন টেক্সট 
-    ctx.fillStyle = '#ffcc00'; 
+    ctx.fillStyle = '#ffcc00';
     ctx.textAlign = 'right';
     ctx.fillText(btnLabel, btnRightEdge, mainH - 20);
-    ctx.textAlign = 'left'; 
+    ctx.textAlign = 'left';
 
     // আইকনের পজিশন
     const iconX = btnRightEdge - labelW - iconGap - iconR;
-    const iconCY = mainH - 28; 
+    const iconCY = mainH - 28;
 
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
@@ -790,60 +791,355 @@ if (d.web) {
   drawAd(ctx);
 }
 
+/* ══════════════════════════════════════════════════════
+   T4 — PORTRAIT NEWS CARD  (1245 × 1536)
+   White/light gradient top half · headline · details btn · cover image
+══════════════════════════════════════════════════════ */
+function T4(ctx, d) {
+  const TW = 1245;          // template-local width
+  const TH = 1536;          // template-local height
+  const MARGIN = 60;        // horizontal margin
+
+  /* ── 1. BACKGROUND: gradient top 60% ── */
+  const topH = Math.round(TH * 0.60);
+  const bgGrad = ctx.createLinearGradient(0, 0, 0, topH);
+  bgGrad.addColorStop(0, '#ffffff');
+  bgGrad.addColorStop(1, '#ffffff');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, TW, topH);
+
+  /* ── 1b. Subtle radial glow top-left ── */
+  const glow = ctx.createRadialGradient(0, 200, 0, 0, 200, 700);
+  glow.addColorStop(0, 'rgba(229,57,53,0.05)');
+  glow.addColorStop(1, 'rgba(229,57,53,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, TW, topH);
+
+  /* ═══════════════════════════════════════
+     2. TOP BAR (Header)
+  ═══════════════════════════════════════ */
+  const HDR_Y = 42;          // top of header row
+  const HDR_H = 80;          // header row height
+  const DATE_X = MARGIN;      // left edge of date box
+  const RED = '#e53935';
+
+  /* ── Date box ── */
+  const dateBoxW = 340;
+  const dateBoxH = 72;
+  const dateBoxR = 10;        // corner radius
+  const iconSq = dateBoxH;  // solid red square occupies full height on right
+  const dateBoxY = HDR_Y + (HDR_H - dateBoxH) / 2;
+
+  // Outer stroked rounded-rect
+  ctx.save();
+  ctx.beginPath();
+  const dbx = DATE_X, dby = dateBoxY, dbw = dateBoxW, dbh = dateBoxH, dbr = dateBoxR;
+  ctx.moveTo(dbx + dbr, dby);
+  ctx.lineTo(dbx + dbw - dbr, dby); ctx.arcTo(dbx + dbw, dby, dbx + dbw, dby + dbr, dbr);
+  ctx.lineTo(dbx + dbw, dby + dbh - dbr); ctx.arcTo(dbx + dbw, dby + dbh, dbx + dbw - dbr, dby + dbh, dbr);
+  ctx.lineTo(dbx + dbr, dby + dbh); ctx.arcTo(dbx, dby + dbh, dbx, dby + dbh - dbr, dbr);
+  ctx.lineTo(dbx, dby + dbr); ctx.arcTo(dbx, dby, dbx + dbr, dby, dbr);
+  ctx.closePath();
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.strokeStyle = RED;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Solid red square on right side of date box
+  const sqX = DATE_X + dateBoxW - iconSq;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(sqX, dby + dbr);
+  ctx.lineTo(sqX, dby + dbh - dbr); ctx.arcTo(sqX, dby + dbh, sqX + dbr, dby + dbh, dbr);
+  ctx.lineTo(dbx + dbw - dbr, dby + dbh); ctx.arcTo(dbx + dbw, dby + dbh, dbx + dbw, dby + dbh - dbr, dbr);
+  ctx.lineTo(dbx + dbw, dby + dbr); ctx.arcTo(dbx + dbw, dby, dbx + dbw - dbr, dby, dbr);
+  ctx.lineTo(sqX + dbr, dby); ctx.arcTo(sqX, dby, sqX, dby + dbr, dbr);
+  ctx.closePath();
+  ctx.fillStyle = RED;
+  ctx.fill();
+  ctx.restore();
+
+  // Calendar icon (white) inside the red square
+  ctx.save();
+  const icCX = sqX + iconSq / 2;
+  const icCY = dby + dbh / 2;
+  const icS = 28; // half-size of icon
+  ctx.strokeStyle = '#ffffff';
+  ctx.fillStyle = '#ffffff';
+  ctx.lineWidth = 2.8;
+  ctx.lineJoin = 'round';
+  // Body rect
+  ctx.strokeRect(icCX - icS, icCY - icS + 6, icS * 2, icS * 2 - 4);
+  // Top bar
+  ctx.fillRect(icCX - icS, icCY - icS + 6, icS * 2, 10);
+  // Hooks
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(icCX - icS * 0.5, icCY - icS + 2); ctx.lineTo(icCX - icS * 0.5, icCY - icS + 18); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(icCX + icS * 0.5, icCY - icS + 2); ctx.lineTo(icCX + icS * 0.5, icCY - icS + 18); ctx.stroke();
+  // Grid dots
+  const dotR = 3;
+  [[-0.5, 0.1], [0.1, 0.1], [0.5, 0.1], [-0.5, 0.55], [0.1, 0.55]].forEach(([fx, fy]) => {
+    ctx.beginPath();
+    ctx.arc(icCX + fx * icS * 1.1, icCY + fy * icS * 1.4, dotR, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+
+  // Date text inside box (left portion)
+  if (d.date) {
+    ctx.save();
+    ctx.font = 'bold 30px Noto Sans Bengali, Arial';
+    ctx.fillStyle = '#1a1a1a';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.fillText(d.date, DATE_X + 16, dby + dbh / 2);
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+    ctx.restore();
+  }
+
+  /* ── Logo (right side) ── */
+  const logoSrc = logo2 || logo;
+  if (logoSrc && logoSrc.width) {
+    const maxLogoH = 75;
+    const ratio = logoSrc.width / logoSrc.height;
+    const lh = Math.min(maxLogoH, logoSrc.height);
+    const lw = Math.round(lh * ratio);
+    const logoX = TW - MARGIN - lw;
+    const logoY = HDR_Y + (HDR_H - lh) / 2;
+    // White bg behind logo
+    ctx.save();
+    ctx.fillStyle = '#393838ff';
+    ctx.fillRect(logoX - 12, logoY - 8, lw + 24, lh + 16);
+    ctx.restore();
+    // Logo image
+    ctx.save();
+    ctx.shadowBlur = 4; ctx.shadowColor = 'rgba(0,0,0,0.18)';
+    ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
+    ctx.drawImage(logoSrc, logoX, logoY, lw, lh);
+    ctx.restore();
+  }
+
+  /* ═══════════════════════════════════════
+     3. HEADLINE — max 3 lines, top-anchored
+  ═══════════════════════════════════════ */
+  const MAX_HL_LINES = 3;
+  const hlFs = 75;
+  const hlLH = hlFs * 1.45;
+  const hlMaxW = TW - MARGIN * 2 - 80;
+  const headerBottom = HDR_Y + HDR_H + 20;
+
+  ctx.font = `bold ${hlFs}px Noto Serif Bengali, Noto Sans Bengali`;
+
+  // Word-wrap then hard-cap at 3 lines
+  let hlLines = [];
+  const hlWords = d.hl.split('\n');
+  for (const para of hlWords) {
+    const ws = para.split(' '); let ln = '';
+    for (const w of ws) {
+      const t = ln ? ln + ' ' + w : w;
+      if (ctx.measureText(t).width > hlMaxW && ln) { hlLines.push(ln.trim()); ln = w; }
+      else ln = t;
+    }
+    if (ln) hlLines.push(ln.trim());
+  }
+  if (hlLines.length > MAX_HL_LINES) {
+    hlLines = hlLines.slice(0, MAX_HL_LINES);
+    // trim last line and add ellipsis if needed
+    let last = hlLines[MAX_HL_LINES - 1];
+    while (ctx.measureText(last + '...').width > hlMaxW && last.length > 0) {
+      last = last.slice(0, -1).trimEnd();
+    }
+    hlLines[MAX_HL_LINES - 1] = last + '...';
+  }
+  const numHlLines = hlLines.length;
+  const totalHlH = numHlLines * hlLH;
+
+  // Anchor headline near the top (just below header), not center
+  const hlStartY = headerBottom + 60 + hlFs;
+
+  ctx.fillStyle = '#1a237e';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  nosh(ctx);
+
+  hlLines.forEach((line, i) => {
+    ctx.fillText(line, TW / 2, hlStartY + i * hlLH);
+  });
+
+  /* ═══════════════════════════════════════
+     4. MAIN IMAGE — bottom 55%
+  ═══════════════════════════════════════ */
+  const imgTop = Math.round(TH * 0.45);
+  const imgH = TH - imgTop;
+
+  // Top separator line
+  ctx.save();
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, imgTop); ctx.lineTo(TW, imgTop);
+  ctx.stroke();
+  ctx.restore();
+
+  if (img1) {
+    cov(ctx, img1, 0, imgTop, TW, imgH, 1, img1Scale, img1OffX, img1OffY);
+  } else {
+    // Placeholder when no image is loaded
+    ctx.save();
+    const phGrad = ctx.createLinearGradient(0, imgTop, 0, TH);
+    phGrad.addColorStop(0, '#e8edf2');
+    phGrad.addColorStop(1, '#cfd8dc');
+    ctx.fillStyle = phGrad;
+    ctx.fillRect(0, imgTop, TW, imgH);
+    ctx.fillStyle = 'rgba(100,120,140,0.5)';
+    ctx.font = 'bold 40px Noto Sans Bengali, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('ছবি আপলোড করুন', TW / 2, imgTop + imgH / 2);
+    ctx.restore();
+  }
+
+  /* ═══════════════════════════════════════
+     5. DETAILS BUTTON (Drawn after image so it overlaps)
+  ═══════════════════════════════════════ */
+  if (d.showDetailsBtn !== false) {
+    const btnLabel = 'বিস্তারিত খবর কমেন্টে.....';
+    const btnFs = 32;
+    const btnPadX = 28;
+    const btnPadY = 18;
+    const btnIconSq = btnFs + btnPadY * 2;  // square icon same height as button
+    ctx.font = `${btnFs}px Noto Sans Bengali, Arial`;
+    const labelW = ctx.measureText(btnLabel).width;
+    const btnW = labelW + btnPadX * 2 + btnIconSq + 16; // text + icon
+    const btnH = btnIconSq;
+    const btnBR = 10;
+    const btnX = (TW - btnW) / 2;
+    // Perfectly centered on the image's top border:
+    const btnY = imgTop - Math.round(btnH / 2);
+
+    // Button shadow
+    ctx.save();
+    ctx.shadowColor = 'rgba(229,57,53,0.25)';
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 4;
+    // White rect body
+    ctx.beginPath();
+    const bx = btnX, by = btnY, bw = btnW, bh = btnH, br = btnBR;
+    ctx.moveTo(bx + br, by);
+    ctx.lineTo(bx + bw - br, by); ctx.arcTo(bx + bw, by, bx + bw, by + br, br);
+    ctx.lineTo(bx + bw, by + bh - br); ctx.arcTo(bx + bw, by + bh, bx + bw - br, by + bh, br);
+    ctx.lineTo(bx + br, by + bh); ctx.arcTo(bx, by + bh, bx, by + bh - br, br);
+    ctx.lineTo(bx, by + br); ctx.arcTo(bx, by, bx + br, by, br);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.restore();
+
+    // Thin red border
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(bx + br, by);
+    ctx.lineTo(bx + bw - br, by); ctx.arcTo(bx + bw, by, bx + bw, by + br, br);
+    ctx.lineTo(bx + bw, by + bh - br); ctx.arcTo(bx + bw, by + bh, bx + bw - br, by + bh, br);
+    ctx.lineTo(bx + br, by + bh); ctx.arcTo(bx, by + bh, bx, by + bh - br, br);
+    ctx.lineTo(bx, by + br); ctx.arcTo(bx, by, bx + br, by, br);
+    ctx.closePath();
+    ctx.strokeStyle = RED;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    // Button label (left-aligned inside button)
+    ctx.save();
+    ctx.font = `${btnFs}px Noto Sans Bengali, Arial`;
+    ctx.fillStyle = '#333333';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(btnLabel, bx + btnPadX, by + bh / 2);
+    ctx.restore();
+
+    // Red icon square on far right of button
+    const iconSqX = bx + bw - btnIconSq;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(iconSqX, by + br);
+    ctx.lineTo(iconSqX, by + bh - br); ctx.arcTo(iconSqX, by + bh, iconSqX + br, by + bh, br);
+    ctx.lineTo(bx + bw - br, by + bh); ctx.arcTo(bx + bw, by + bh, bx + bw, by + bh - br, br);
+    ctx.lineTo(bx + bw, by + br); ctx.arcTo(bx + bw, by, bx + bw - br, by, br);
+    ctx.lineTo(iconSqX + br, by); ctx.arcTo(iconSqX, by, iconSqX, by + br, br);
+    ctx.closePath();
+    ctx.fillStyle = RED;
+    ctx.fill();
+    ctx.restore();
+
+    // Link icon (🔗) inside the red square
+    ctx.save();
+    ctx.font = `${Math.round(btnIconSq * 0.52)}px Arial`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔗', iconSqX + btnIconSq / 2, by + bh / 2);
+    ctx.restore();
+  }
+  drawAd(ctx, TW);
+}
+
 /* ── dispatch ── */
-const FNS = [T1, T2, T3];
-const TNAMES = ['নগর সমাচার আর্টিকেল', 'নগর সমাচার স্টাইল', 'নগর সমাচার + বক্তা/পদবি'];
+const FNS = [T1, T2, T3, T4];
+const TNAMES = ['নগর সমাচার আর্টিকেল', 'নগর সমাচার স্টাইল', 'নগর সমাচার + বক্তা/পদবি', 'পোর্ট্রেট নিউজ কার্ড'];
 function drawT(ctx, idx) { ctx.clearRect(0, 0, W, H); FNS[idx](ctx, inp()); }
-// function rf() { drawT($('mainCanvas').getContext('2d'), curT); $('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; }
-function rf() { 
-  // বিজ্ঞাপন অন থাকলে ক্যানভাসের হাইট ১২০ পিক্সেল বেড়ে যাবে (1200px)
-  H = showAd ? 1080 + 120 : 1080; 
-  
-  // HTML ক্যানভাসের সাইজ রিয়েল-টাইমে আপডেট করা
+function rf() {
+  // T4 is a portrait card (1245 x 1536); all others are 1080 x 1080
+  const isT4 = curT === 3;
+  const baseW = isT4 ? 1245 : 1080;
+  const baseH = isT4 ? 1536 : 1080;
+  H = baseH + (showAd ? AD_H : 0);
   const cvs = document.getElementById('mainCanvas');
+  if (cvs.width !== baseW) cvs.width = baseW;
   if (cvs.height !== H) cvs.height = H;
-  
-  drawT(cvs.getContext('2d'), curT); 
-  document.getElementById('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`; 
+  drawT(cvs.getContext('2d'), curT);
+  document.getElementById('ctname').textContent = `টেমপ্লেট ${curT + 1} — ${TNAMES[curT]}`;
 }
 
 function rth() {
   const g = $('tgrid'); g.innerHTML = '';
-  
-  // থাম্বনেইলগুলোর হাইটও বিজ্ঞাপনের সাথে তাল মিলিয়ে পরিবর্তন হবে
-  H = showAd ? 1080 + 120 : 1080; 
-  
+
   FNS.forEach((_, i) => {
-    const d = document.createElement('div'); d.className = 'tc' + (i === curT ? ' on' : '');
-    const tc = document.createElement('canvas'); 
-    tc.width = 300; 
-    
-    // হাইটের রেশিও অনুযায়ী থাম্বনেইলের উচ্চতা নির্ধারণ
-    tc.height = showAd ? Math.round(300 * (H / W)) : 300;
-    
+    const isPortrait = i === 3;
+    const szW = isPortrait ? 1245 : 1080;
+    const szH = isPortrait ? (1536 + (showAd ? AD_H : 0)) : (showAd ? 1080 + AD_H : 1080);
+
+    const div = document.createElement('div'); div.className = 'tc' + (i === curT ? ' on' : '');
+    const tc = document.createElement('canvas');
+    tc.width = 300;
+    tc.height = Math.round(300 * (szH / szW));
+
     const num = document.createElement('div'); num.className = 'tnum'; num.textContent = i + 1;
     const nm = document.createElement('div'); nm.className = 'tcn'; nm.textContent = TNAMES[i];
-    d.append(tc, num, nm);
-    
-    d.onclick = () => { 
-      document.querySelectorAll('.tc').forEach(x => x.classList.remove('on')); 
-      d.classList.add('on'); 
-      curT = i; 
+    div.append(tc, num, nm);
 
-      // T2 তে ক্লিক করলে ডিফল্ট হেডলাইন
+    div.onclick = () => {
+      document.querySelectorAll('.tc').forEach(x => x.classList.remove('on'));
+      div.classList.add('on');
+      curT = i;
       const hlInput = $('headline');
       if (curT === 1 && (!hlInput.value || hlInput.value.trim() === 'শিরোনাম')) {
         hlInput.value = 'দেশের সর্বশেষ গুরুত্বপূর্ণ সংবাদ শিরোনাম এখানে লিখুন';
       }
-
-      rf(); 
+      rf();
     };
-    
-    g.append(d);
-    const c2 = tc.getContext('2d'); 
-    c2.save(); 
-    c2.scale(tc.width / W, tc.height / H); 
-    drawT(c2, i); 
+
+    g.append(div);
+    const c2 = tc.getContext('2d');
+    c2.save();
+    c2.scale(tc.width / szW, tc.height / szH);
+    const prevH = H;
+    H = szH;
+    drawT(c2, i);
+    H = prevH;
     c2.restore();
   });
 }
