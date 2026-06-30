@@ -1,5 +1,5 @@
 // নগর সমাচার ২৪ — Card Maker Service Worker
-const CACHE_NAME = 'nogor-card-maker-v8';
+const CACHE_NAME = 'nogor-card-maker-v9';
 
 // অফলাইনে যা যা লাগবে সেগুলো cache করে রাখবো
 const ASSETS_TO_CACHE = [
