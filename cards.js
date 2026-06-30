@@ -136,6 +136,10 @@ let rawLogo = new Image();
 rawLogo.onload = () => { rf(); rth(); };
 rawLogo.src = 'logo.png';
 
+let adLogoImg = new Image();
+adLogoImg.onload = () => { rf(); rth(); };
+adLogoImg.src = 'adlogo.jpeg';
+
 let clockImg = null;
 (() => {
   const cl = new Image();
@@ -144,7 +148,7 @@ let clockImg = null;
 })();
 
 
-function inp() { return { hl: $('headline').value || 'শিরোনাম', hlFs: parseInt($('hlFs').value) || 48, hlY: parseInt($('hlY').value) || 100, hlX: parseInt($('hlX').value) || 52, body: $('bodytext').value || '', sp: $('speaker').value || '', des: $('designation').value || '', cat: $('category').value, date: $('catdate').value || '', web: $('website').value || '', showDetailsBtn: $('showDetailsBtn') ? $('showDetailsBtn').checked : true, accent }; }
+function inp() { return { hl: $('headline').value || 'শিরোনাম', hlFs: parseInt($('hlFs').value) || 48, hlY: parseInt($('hlY').value) || 100, hlX: parseInt($('hlX').value) || 52, body: $('bodytext').value || '', sp: $('speaker').value || '', des: $('designation').value || '', cat: $('category').value, date: $('catdate').value || '', web: $('website').value || '', showDetailsBtn: $('showDetailsBtn') ? $('showDetailsBtn').checked : true, showCreditBtn: $('showCreditBtn') ? $('showCreditBtn').checked : false, accent }; }
 
 /* ── core helpers ── */
 function cov(ctx, im, x, y, w, h, al = 1, scale = 1, offX = 0, offY = 0) {
@@ -795,16 +799,20 @@ function T3(ctx, d) {
    T4 — PORTRAIT NEWS CARD  (1245 × 1536)
    White/light gradient top half · headline · details btn · cover image
 ══════════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   T4 — PORTRAIT NEWS CARD  (1245 × 1536)
+   White/light gradient top half · headline · details btn · cover image
+══════════════════════════════════════════════════════ */
 function T4(ctx, d) {
   const TW = 1245;          // template-local width
   const TH = 1536;          // template-local height
   const MARGIN = 60;        // horizontal margin
 
-  /* ── 1. BACKGROUND: gradient top 60% ── */
+  /* ── 1. BACKGROUND: gradient top 60% (Updated to Gray) ── */
   const topH = Math.round(TH * 0.60);
   const bgGrad = ctx.createLinearGradient(0, 0, 0, topH);
-  bgGrad.addColorStop(0, '#ffffff');
-  bgGrad.addColorStop(1, '#ffffff');
+  bgGrad.addColorStop(0, '#f3f4f6'); // Light gray
+  bgGrad.addColorStop(1, '#e5e7eb'); // Slightly darker gray at bottom
   ctx.fillStyle = bgGrad;
   ctx.fillRect(0, 0, TW, topH);
 
@@ -900,28 +908,79 @@ function T4(ctx, d) {
     ctx.restore();
   }
 
-  /* ── Logo (right side) ── */
-  const logoSrc = logo2 || logo;
-  if (logoSrc && logoSrc.width) {
-    const maxLogoH = 75;
-    const ratio = logoSrc.width / logoSrc.height;
-    const lh = Math.min(maxLogoH, logoSrc.height);
-    const lw = Math.round(lh * ratio);
-    const logoX = TW - MARGIN - lw;
-    const logoY = HDR_Y + (HDR_H - lh) / 2;
-    // White bg behind logo
+  /* ── Details Button (Top Right, replaces logo) ── */
+  if (d.showDetailsBtn !== false) {
+    const btnLabel = 'বিস্তারিত খবর কমেন্টে.....';
+    const btnFs = 28;
+    const btnPadX = 20;
+    const btnPadY = 14;
+    const btnIconSq = btnFs + btnPadY * 2;
+    ctx.font = `${btnFs}px Noto Sans Bengali, Arial`;
+    const labelW = ctx.measureText(btnLabel).width;
+    const btnW = labelW + btnPadX * 2 + btnIconSq + 12;
+    const btnH = btnIconSq;
+    const btnBR = 8;
+
+    const bx = TW - MARGIN - btnW;
+    const by = HDR_Y + (HDR_H - btnH) / 2;
+
     ctx.save();
-    ctx.fillStyle = '#393838ff';
-    ctx.fillRect(logoX - 12, logoY - 8, lw + 24, lh + 16);
+    ctx.shadowColor = 'rgba(229,57,53,0.25)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 3;
+    ctx.beginPath();
+    ctx.moveTo(bx + btnBR, by);
+    ctx.lineTo(bx + btnW - btnBR, by); ctx.arcTo(bx + btnW, by, bx + btnW, by + btnBR, btnBR);
+    ctx.lineTo(bx + btnW, by + btnH - btnBR); ctx.arcTo(bx + btnW, by + btnH, bx + btnW - btnBR, by + btnH, btnBR);
+    ctx.lineTo(bx + btnBR, by + btnH); ctx.arcTo(bx, by + btnH, bx, by + btnH - btnBR, btnBR);
+    ctx.lineTo(bx, by + btnBR); ctx.arcTo(bx, by, bx + btnBR, by, btnBR);
+    ctx.closePath();
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
     ctx.restore();
-    // Logo image
+
     ctx.save();
-    ctx.shadowBlur = 4; ctx.shadowColor = 'rgba(0,0,0,0.18)';
-    ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
-    ctx.drawImage(logoSrc, logoX, logoY, lw, lh);
+    ctx.beginPath();
+    ctx.moveTo(bx + btnBR, by);
+    ctx.lineTo(bx + btnW - btnBR, by); ctx.arcTo(bx + btnW, by, bx + btnW, by + btnBR, btnBR);
+    ctx.lineTo(bx + btnW, by + btnH - btnBR); ctx.arcTo(bx + btnW, by + btnH, bx + btnW - btnBR, by + btnH, btnBR);
+    ctx.lineTo(bx + btnBR, by + btnH); ctx.arcTo(bx, by + btnH, bx, by + btnH - btnBR, btnBR);
+    ctx.lineTo(bx, by + btnBR); ctx.arcTo(bx, by, bx + btnBR, by, btnBR);
+    ctx.closePath();
+    ctx.strokeStyle = RED;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = `${btnFs}px Noto Sans Bengali, Arial`;
+    ctx.fillStyle = '#333333';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(btnLabel, bx + btnPadX, by + btnH / 2);
+    ctx.restore();
+
+    const iconSqX = bx + btnW - btnIconSq;
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(iconSqX, by + btnBR);
+    ctx.lineTo(iconSqX, by + btnH - btnBR); ctx.arcTo(iconSqX, by + btnH, iconSqX + btnBR, by + btnH, btnBR);
+    ctx.lineTo(bx + btnW - btnBR, by + btnH); ctx.arcTo(bx + btnW, by + btnH, bx + btnW, by + btnH - btnBR, btnBR);
+    ctx.lineTo(bx + btnW, by + btnBR); ctx.arcTo(bx + btnW, by, bx + btnW - btnBR, by, btnBR);
+    ctx.lineTo(iconSqX + btnBR, by); ctx.arcTo(iconSqX, by, iconSqX, by + btnBR, btnBR);
+    ctx.closePath();
+    ctx.fillStyle = RED;
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    ctx.font = `${Math.round(btnIconSq * 0.52)}px Arial`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔗', iconSqX + btnIconSq / 2, by + btnH / 2);
     ctx.restore();
   }
-
   /* ═══════════════════════════════════════
      3. HEADLINE — max 3 lines, top-anchored
   ═══════════════════════════════════════ */
@@ -969,15 +1028,30 @@ function T4(ctx, d) {
     ctx.fillText(line, TW / 2, hlStartY + i * hlLH);
   });
 
+  const lastLineY = hlStartY + (numHlLines - 1) * hlLH;
+  let currentY = lastLineY + 70;
+
+  if (d.sp) {
+    ctx.fillStyle = RED;
+    ctx.font = 'bold 36px Noto Sans Bengali';
+    ctx.fillText('— ' + d.sp, TW / 2, currentY);
+    currentY += 45;
+  }
+  if (d.des) {
+    ctx.fillStyle = '#666666';
+    ctx.font = '30px Noto Sans Bengali';
+    ctx.fillText(d.des, TW / 2, currentY);
+  }
+
   /* ═══════════════════════════════════════
-     4. MAIN IMAGE — bottom 55%
+     4. MAIN IMAGE — bottom 55% (adjust if extra fields)
   ═══════════════════════════════════════ */
-  const imgTop = Math.round(TH * 0.45);
+  const imgTop = (d.sp || d.des) ? Math.round(TH * 0.47) : Math.round(TH * 0.45);
   const imgH = TH - imgTop;
 
   // Top separator line
   ctx.save();
-  ctx.strokeStyle = '#e2e8f0';
+  ctx.strokeStyle = '#3f4041ff';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(0, imgTop); ctx.lineTo(TW, imgTop);
@@ -990,11 +1064,11 @@ function T4(ctx, d) {
     // Placeholder when no image is loaded
     ctx.save();
     const phGrad = ctx.createLinearGradient(0, imgTop, 0, TH);
-    phGrad.addColorStop(0, '#e8edf2');
+    phGrad.addColorStop(0, '#cfd8dc');
     phGrad.addColorStop(1, '#cfd8dc');
     ctx.fillStyle = phGrad;
     ctx.fillRect(0, imgTop, TW, imgH);
-    ctx.fillStyle = 'rgba(100,120,140,0.5)';
+    ctx.fillStyle = 'rgba(35, 39, 43, 0.15)';
     ctx.font = 'bold 40px Noto Sans Bengali, Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1003,85 +1077,73 @@ function T4(ctx, d) {
   }
 
   /* ═══════════════════════════════════════
-     5. DETAILS BUTTON (Drawn after image so it overlaps)
+     5. CENTER AD LOGO (Replaces old Details Button)
   ═══════════════════════════════════════ */
-  if (d.showDetailsBtn !== false) {
-    const btnLabel = 'বিস্তারিত খবর কমেন্টে.....';
-    const btnFs = 32;
-    const btnPadX = 28;
-    const btnPadY = 18;
-    const btnIconSq = btnFs + btnPadY * 2;  // square icon same height as button
-    ctx.font = `${btnFs}px Noto Sans Bengali, Arial`;
-    const labelW = ctx.measureText(btnLabel).width;
-    const btnW = labelW + btnPadX * 2 + btnIconSq + 16; // text + icon
-    const btnH = btnIconSq;
-    const btnBR = 10;
-    const btnX = (TW - btnW) / 2;
-    // Perfectly centered on the image's top border:
-    const btnY = imgTop - Math.round(btnH / 2);
+  if (adLogoImg && adLogoImg.width) {
+    const alH = 60; // Keep it modest
+    const alW = (adLogoImg.width / adLogoImg.height) * alH;
+    const alX = (TW - alW) / 2;
+    const alY = imgTop - (alH / 2);
 
-    // Button shadow
     ctx.save();
-    ctx.shadowColor = 'rgba(229,57,53,0.25)';
-    ctx.shadowBlur = 18;
+    ctx.shadowColor = 'rgba(0,0,0,0.3)';
+    ctx.shadowBlur = 10;
     ctx.shadowOffsetY = 4;
-    // White rect body
+
+    // Clip the image to a rounded pill shape to hide the white corners from the JPEG
+    const br = alH / 2;
     ctx.beginPath();
-    const bx = btnX, by = btnY, bw = btnW, bh = btnH, br = btnBR;
-    ctx.moveTo(bx + br, by);
-    ctx.lineTo(bx + bw - br, by); ctx.arcTo(bx + bw, by, bx + bw, by + br, br);
-    ctx.lineTo(bx + bw, by + bh - br); ctx.arcTo(bx + bw, by + bh, bx + bw - br, by + bh, br);
-    ctx.lineTo(bx + br, by + bh); ctx.arcTo(bx, by + bh, bx, by + bh - br, br);
-    ctx.lineTo(bx, by + br); ctx.arcTo(bx, by, bx + br, by, br);
+    ctx.moveTo(alX + br, alY);
+    ctx.lineTo(alX + alW - br, alY); ctx.arcTo(alX + alW, alY, alX + alW, alY + br, br);
+    ctx.lineTo(alX + alW, alY + alH - br); ctx.arcTo(alX + alW, alY + alH, alX + alW - br, alY + alH, br);
+    ctx.lineTo(alX + br, alY + alH); ctx.arcTo(alX, alY + alH, alX, alY + alH - br, br);
+    ctx.lineTo(alX, alY + br); ctx.arcTo(alX, alY, alX + br, alY, br);
     ctx.closePath();
+    ctx.clip();
+
+    ctx.drawImage(adLogoImg, alX, alY, alW, alH);
+    ctx.restore();
+  }
+
+  /* ═══════════════════════════════════════
+     6. IMAGE CREDIT BADGE (Bottom Right of Image)
+  ═══════════════════════════════════════ */
+  if (d.showCreditBtn) {
+    const crLabel = 'ছবি সংগৃহীত';
+    const crFs = 24;
+    const crPadX = 20;
+    const crPadY = 12;
+    ctx.font = `${crFs}px Noto Sans Bengali, Arial`;
+    const crW = ctx.measureText(crLabel).width + crPadX * 2;
+    const crH = crFs + crPadY * 2;
+    const crBR = 8;
+    const crX = TW - MARGIN - crW;
+    const crY = TH - 40 - crH;
+
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.2)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+
+    ctx.beginPath();
+    ctx.moveTo(crX + crBR, crY);
+    ctx.lineTo(crX + crW - crBR, crY); ctx.arcTo(crX + crW, crY, crX + crW, crY + crBR, crBR);
+    ctx.lineTo(crX + crW, crY + crH - crBR); ctx.arcTo(crX + crW, crY + crH, crX + crW - crBR, crY + crH, crBR);
+    ctx.lineTo(crX + crBR, crY + crH); ctx.arcTo(crX, crY + crH, crX, crY + crH - crBR, crBR);
+    ctx.lineTo(crX, crY + crBR); ctx.arcTo(crX, crY, crX + crBR, crY, crBR);
+    ctx.closePath();
+
     ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.restore();
 
-    // Thin red border
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(bx + br, by);
-    ctx.lineTo(bx + bw - br, by); ctx.arcTo(bx + bw, by, bx + bw, by + br, br);
-    ctx.lineTo(bx + bw, by + bh - br); ctx.arcTo(bx + bw, by + bh, bx + bw - br, by + bh, br);
-    ctx.lineTo(bx + br, by + bh); ctx.arcTo(bx, by + bh, bx, by + bh - br, br);
-    ctx.lineTo(bx, by + br); ctx.arcTo(bx, by, bx + br, by, br);
-    ctx.closePath();
     ctx.strokeStyle = RED;
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.restore();
 
-    // Button label (left-aligned inside button)
-    ctx.save();
-    ctx.font = `${btnFs}px Noto Sans Bengali, Arial`;
     ctx.fillStyle = '#333333';
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(btnLabel, bx + btnPadX, by + bh / 2);
-    ctx.restore();
-
-    // Red icon square on far right of button
-    const iconSqX = bx + bw - btnIconSq;
-    ctx.save();
-    ctx.beginPath();
-    ctx.moveTo(iconSqX, by + br);
-    ctx.lineTo(iconSqX, by + bh - br); ctx.arcTo(iconSqX, by + bh, iconSqX + br, by + bh, br);
-    ctx.lineTo(bx + bw - br, by + bh); ctx.arcTo(bx + bw, by + bh, bx + bw, by + bh - br, br);
-    ctx.lineTo(bx + bw, by + br); ctx.arcTo(bx + bw, by, bx + bw - br, by, br);
-    ctx.lineTo(iconSqX + br, by); ctx.arcTo(iconSqX, by, iconSqX, by + br, br);
-    ctx.closePath();
-    ctx.fillStyle = RED;
-    ctx.fill();
-    ctx.restore();
-
-    // Link icon (🔗) inside the red square
-    ctx.save();
-    ctx.font = `${Math.round(btnIconSq * 0.52)}px Arial`;
-    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🔗', iconSqX + btnIconSq / 2, by + bh / 2);
+    ctx.fillText(crLabel, crX + crW / 2, crY + crH / 2);
     ctx.restore();
   }
   drawAd(ctx, TW);

@@ -1,13 +1,19 @@
 {
-  "name": "নগর সমাচার ২৪ – Card Maker",
-  "short_name": "Card Maker",
-  "description": "নগর সমাচার ২৪ নিউজ কার্ড মেকার — প্রফেশনাল নিউজ কার্ড তৈরি করুন",
+  "name": "নগর সমাচার ২৪ – Premium Card Studio",
+  "short_name": "Card Studio",
+  "description": "দেশের সেরা এবং প্রফেশনাল নিউজ কার্ড মেকার। মুহূর্তের মধ্যে যেকোনো ব্রেকিং নিউজ বা খবরের আকর্ষণীয় কার্ড তৈরি করুন।",
   "start_url": "./index.html",
   "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#0a0a0f",
   "theme_color": "#c0392b",
   "orientation": "portrait-primary",
   "lang": "bn",
+  "dir": "ltr",
   "icons": [
     {
       "src": "logo.png",
@@ -22,6 +28,26 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["productivity", "utilities"],
+  "categories": [
+    "productivity",
+    "utilities",
+    "news",
+    "design",
+    "graphics"
+  ],
+  "shortcuts": [
+    {
+      "name": "নতুন নিউজ কার্ড",
+      "short_name": "নতুন কার্ড",
+      "description": "নতুন একটি নিউজ কার্ড ডিজাইন শুরু করুন",
+      "url": "./index.html",
+      "icons": [
+        {
+          "src": "logo.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
   "screenshots": []
 }
