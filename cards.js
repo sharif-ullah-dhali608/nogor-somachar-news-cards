@@ -528,33 +528,33 @@ function T2(ctx, d) {
   const hlY = dateY + 62 + yOffset;
   let hlLines = wrapR(ctx, d.hl, W - 44, hlY, hlMaxW, lh);
   ctx.textAlign = 'left';
-  /* 8. Website URL — বামপাশে (Triangle এর নিচে) বসানো হলো */
+  /* 8. Website URL — ডানপাশে (বিস্তারিত কমেন্টে এর নিচে) বসানো হলো */
   if (d.web) {
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
     ctx.font = '30px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(d.web, W - 44, mainH - 18);
     ctx.textAlign = 'left';
-    ctx.fillText(d.web, 25, mainH - 22);
   }
-  /* 10. বিস্তারিত কমেন্টে — আরও বামে সরানো হলো */
+  /* 10. বিস্তারিত কমেন্টে — উপরে সরানো হলো */
   if (d.showDetailsBtn) {
     const iconR = 15;
     const btnLabel = 'বিস্তারিত কমেন্টে';
     ctx.font = 'bold 27px Noto Sans Bengali';
     const labelW = ctx.measureText(btnLabel).width;
     const iconGap = 10;
-
-    // আগে W - 44 ছিল, এখন আরও একটু বামে সরাতে W - 75 করা হলো
     const btnRightEdge = W - 44;
+    const btnY = mainH - 85; // Moved further up
 
     // বাটন টেক্সট 
     ctx.fillStyle = '#ffcc00';
     ctx.textAlign = 'right';
-    ctx.fillText(btnLabel, btnRightEdge, mainH - 20);
+    ctx.fillText(btnLabel, btnRightEdge, btnY);
     ctx.textAlign = 'left';
 
     // আইকনের পজিশন
     const iconX = btnRightEdge - labelW - iconGap - iconR;
-    const iconCY = mainH - 28;
+    const iconCY = btnY - 8;
 
     ctx.beginPath();
     ctx.arc(iconX, iconCY, iconR, 0, Math.PI * 2);
@@ -729,7 +729,7 @@ function T3(ctx, d) {
   // স্পিকার/রিপোর্টার নাম
   if (d.sp) {
     ctx.fillStyle = '#ffcc00';
-    ctx.font = 'bold 41px SolaimanLipi, AdorshoLipi, Noto Sans Bengali';
+    ctx.font = 'bold 50px SolaimanLipi, AdorshoLipi, Noto Sans Bengali';
     ctx.textAlign = 'right';
     ctx.fillText(d.sp, spkRightEdge, spkY);
     ctx.textAlign = 'left';
@@ -747,7 +747,7 @@ function T3(ctx, d) {
   /* পদবি/বিভাগ */
   if (d.des) {
     const webY = mainH - 18;
-    const desY = dividerY + ((webY - dividerY) / 2) - 10;
+    const desY = dividerY + 35; // Moved further up, just below the divider
 
     ctx.fillStyle = 'rgba(200,200,200,0.85)';
     ctx.font = '31px Noto Sans Bengali';
@@ -833,7 +833,7 @@ function T4(ctx, d) {
 
   /* ── Date box ── */
   const dateBoxW = 340;
-  const dateBoxH = 72;
+  const dateBoxH = 56;
   const dateBoxR = 10;        // corner radius
   const iconSq = dateBoxH;  // solid red square occupies full height on right
   const dateBoxY = HDR_Y + (HDR_H - dateBoxH) / 2;
@@ -910,7 +910,7 @@ function T4(ctx, d) {
 
   /* ── Details Button (Top Right, replaces logo) ── */
   if (d.showDetailsBtn !== false) {
-    const btnLabel = 'বিস্তারিত খবর কমেন্টে.....';
+    const btnLabel = 'নিউজ লিংক কমেন্টে';
     const btnFs = 28;
     const btnPadX = 20;
     const btnPadY = 14;
@@ -1029,18 +1029,23 @@ function T4(ctx, d) {
   });
 
   const lastLineY = hlStartY + (numHlLines - 1) * hlLH;
-  let currentY = lastLineY + 70;
+  let currentY = lastLineY + 95;
 
   if (d.sp) {
     ctx.fillStyle = RED;
-    ctx.font = 'bold 36px Noto Sans Bengali';
+    ctx.font = 'bold 50px Noto Sans Bengali';
     ctx.fillText('— ' + d.sp, TW / 2, currentY);
-    currentY += 45;
+    currentY += 55;
   }
   if (d.des) {
-    ctx.fillStyle = '#666666';
-    ctx.font = '30px Noto Sans Bengali';
+    ctx.save();
+    ctx.fillStyle = '#000000'; // black
+    ctx.font = 'bold 38px Noto Sans Bengali';
+    // ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
     ctx.fillText(d.des, TW / 2, currentY);
+    ctx.restore();
   }
 
   /* ═══════════════════════════════════════
@@ -1079,29 +1084,35 @@ function T4(ctx, d) {
   /* ═══════════════════════════════════════
      5. CENTER AD LOGO (Replaces old Details Button)
   ═══════════════════════════════════════ */
-  if (adLogoImg && adLogoImg.width) {
-    const alH = 60; // Keep it modest
-    const alW = (adLogoImg.width / adLogoImg.height) * alH;
-    const alX = (TW - alW) / 2;
-    const alY = imgTop - (alH / 2);
+  if (logo2 && logo2.width) {
+    const alH = 50;
+    const alW = (logo2.width / logo2.height) * alH;
+    const padX = 24;
+    const padY = 14;
+    const boxW = alW + padX * 2;
+    const boxH = alH + padY * 2;
+    const boxX = (TW - boxW) / 2;
+    const boxY = imgTop - (boxH / 2);
 
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,0.3)';
-    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(0,0,0,0.25)';
+    ctx.shadowBlur = 12;
     ctx.shadowOffsetY = 4;
 
-    // Clip the image to a rounded pill shape to hide the white corners from the JPEG
-    const br = alH / 2;
+    const br = 12;
     ctx.beginPath();
-    ctx.moveTo(alX + br, alY);
-    ctx.lineTo(alX + alW - br, alY); ctx.arcTo(alX + alW, alY, alX + alW, alY + br, br);
-    ctx.lineTo(alX + alW, alY + alH - br); ctx.arcTo(alX + alW, alY + alH, alX + alW - br, alY + alH, br);
-    ctx.lineTo(alX + br, alY + alH); ctx.arcTo(alX, alY + alH, alX, alY + alH - br, br);
-    ctx.lineTo(alX, alY + br); ctx.arcTo(alX, alY, alX + br, alY, br);
+    ctx.moveTo(boxX + br, boxY);
+    ctx.lineTo(boxX + boxW - br, boxY); ctx.arcTo(boxX + boxW, boxY, boxX + boxW, boxY + br, br);
+    ctx.lineTo(boxX + boxW, boxY + boxH - br); ctx.arcTo(boxX + boxW, boxY + boxH, boxX + boxW - br, boxY + boxH, br);
+    ctx.lineTo(boxX + br, boxY + boxH); ctx.arcTo(boxX, boxY + boxH, boxX, boxY + boxH - br, br);
+    ctx.lineTo(boxX, boxY + br); ctx.arcTo(boxX, boxY, boxX + br, boxY, br);
     ctx.closePath();
-    ctx.clip();
 
-    ctx.drawImage(adLogoImg, alX, alY, alW, alH);
+    ctx.fillStyle = '#5e5554ff';
+    ctx.fill();
+
+    ctx.shadowColor = 'transparent';
+    ctx.drawImage(logo2, boxX + padX, boxY + padY, alW, alH);
     ctx.restore();
   }
 
